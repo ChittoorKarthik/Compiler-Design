@@ -1,0 +1,12 @@
+thechko numpy;
+sankhya x;
+theesko(x);
+a=b*(2-4);
+chupi("hello world!");
+sankhya arr[7];
+okavela(a+3 samanam 2){
+    x=3;
+}
+lekapothe{
+    x=5;
+}

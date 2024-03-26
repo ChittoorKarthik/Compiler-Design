@@ -1,0 +1,35 @@
+sankhya x= 3;
+okavela x samanam 3
+
+sankhya num1 = 10;
+sankhya num2 = 5;
+sankhya result = num1 + num2;
+ivvu result;
+
+
+
+sankhya score = 85;
+okavela(score >= 60) {
+    chupi "Congratulations! You passed the exam.";
+} lekapothe {
+    chupi "Sorry, you failed the exam.";
+}
+
+sankhya count = 1;
+okavela(count <= 5) {
+    chupi "Count: " theega count;
+    count = count + 1;
+}
+
+thelu num1 = 3.5;
+thelu num2 = 2.0;
+thelu result = num1 * num2;
+ivvu result;
+
+aksharam name = "John";
+chupi "Hello, " mariyu name mariyu "!";
+
+sankhya a = 10;
+sankhya b = 5;
+sankhya c = a * b + 20;
+ivvu c;

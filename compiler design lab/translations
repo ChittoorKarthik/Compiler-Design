@@ -1,0 +1,39 @@
+Syntax for our programming language will be a mix of C++,Python and Javascript
+
+// translations
+   sankhya - int
+    thelu-float
+    aksharam-char
+    okavela-if
+    lekaokavela-elif
+    lekapothe-else
+    chupi-print
+    theega - string
+    ivvu - return
+    pani - function
+    aithaunte - while
+    mariyu - and
+    leda - or
+    kaddu - not
+    pratyekam - xor
+    samanam - ==
+    bhinnam - !=
+    peddadiLedaSamanam - >=
+    chinnadiLedaSamanam - <=
+    chinnadi - <
+    peddadi - >
+    thechko - import
+    theesko - input
+
+TELUGU_DATATYPE: sankhya,thelu,aksharam,theega,
+TELUGU_COMPARISION_OPERATOR: samanam,bhinnam,peddadiLedaSamanam,chinnadiLedaSamanam,chinnadi,peddadi
+TELUGU_IF: okavela
+TELUGU_ELIF: lekaokavela
+TELUGU_ELSE: lekapothe
+TELUGU_WHILE: aithaunte
+TELUGU_FUNCTION: pani
+TELUGU_RETURN: ivvu
+
+
+
+
