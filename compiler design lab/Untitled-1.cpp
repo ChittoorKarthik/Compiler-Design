@@ -34,7 +34,7 @@ while(q--){
     int type,a,b;
     cin>>type>>a>>b;
     if(type==0){  //contact - merge
-        leader[min(a,b)]=max(a,b);
+        leader[leader[min(a,b)]]=leader[max(a,b)];
         if(isinfected[a] && !isinfected[b]){
             isinfected[b]=true;
             ans[b]=time;

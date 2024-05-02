@@ -1,35 +1,14 @@
-sankhya x= + 3;
-87376// this is a comment
-okavela x samanam 3
-#
-theega arr[12];
-// sample comment
-sankhya num1 = 10;
-sankhya num2 = 5;
-sankhya result = num1 + num2;
-ivvu result;
-sankhya score = 85;
-aithaunte (score peddadi 50){
-    chupi("sample string");
+sankhya arr[6];
+arr[0]=9;
+arr[1]=3;
+arr[2]=4;
+arr[3]=2;
+arr[4]=1;
+arr[5]=8;
+sankhya n = 6;
+quickSort(arr,0,n-1);
+sankhya i=0;
+aithaunte(i chinnadi n){
+    chupi(arr[i]," ");
+    i=i+1;
 }
-okavela(score peddadiLedaSamanam 60) {
-    chupi("Congratulations! You passed the exam.");
-} lekapothe {
-    chupi("Sorry, you failed the exam.");
-}
-
-sankhya count = 1;
-okavela(count chinnadiLedaSamanam 5) {
-    chupi("Count: ",count);
-    count = count + 1;
-}
-thelu num1 = 3.52;
-thelu num2 = 2.071;
-thelu result = num1 * num2;
-ivvu result;
-theega name = "John";
-chupi("Hello i am a sample string");
-sankhya a = 10;
-sankhya b = 5;
-sankhya c = a * b + 20;
-ivvu c;

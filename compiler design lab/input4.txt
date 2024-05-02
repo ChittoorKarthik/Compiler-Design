@@ -1,0 +1,54 @@
+pani partition(sankhya arr, sankhya start, sankhya end){
+    sankhya pivot = arr[start];
+	sankhya count = 0;
+    sankhya ind = start+1;
+    aithaunte(ind chinnadiLedaSamanam end){
+        okavela(arr[ind] chinnadiLedaSamanam pivot){
+            count=count+1;
+        }
+        ind = ind+1;
+    }
+    sankhya pivotIndex = start + count;
+    sankhya dummy = arr[pivotIndex];
+    arr[pivotIndex] = arr[start];
+    arr[start] = dummy;
+	sankhya i = start;
+    sankhya j = end;
+    aithaunte((i chinnadi pivotIndex) mariyu (j peddadi pivotIndex)){
+		aithaunte(arr[i] chinnadiLedaSamanam pivot){
+			i=i+1;
+		}
+		aithaunte(arr[j] peddadi pivot){
+			j=j-1;
+		}
+		okavela((i chinnadi pivotIndex) mariyu (j peddadi pivotIndex)){
+            sankhya temp = arr[i];
+            arr[i] = arr[j];
+            arr[j] = temp;
+            i=i+1;
+            j=j-1;
+		}
+	}
+	ivvu pivotIndex;
+}
+pani quickSort(sankhya arr, sankhya start, sankhya end){
+    okavela(start chinnadi end){
+        sankhya p = partition(arr, start, end);
+        quickSort(arr,start,p-1);
+        quickSort(arr,p+1,end);
+    }
+}
+sankhya arr[6];
+arr[0]=9;
+arr[1]=3;
+arr[2]=4;
+arr[3]=2;
+arr[4]=1;
+arr[5]=8;
+sankhya n = 6;
+quickSort(arr, 0, n - 1);
+sankhya i=0;
+aithaunte(i chinnadi n){
+    chupi(arr[i]," ");
+    i=i+1;
+}

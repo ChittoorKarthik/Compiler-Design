@@ -1,0 +1,3819 @@
+Nonterminals useless in grammar
+
+   telugu_function_name_call
+   telugu_newline
+   empty_lines
+
+
+Terminals unused in grammar
+
+   TELUGU_NEWLINE
+
+
+Rules useless in grammar
+
+  112 telugu_function_name_call: TELUGU_IDENTIFIER
+
+  113 telugu_newline: TELUGU_NEWLINE
+
+  114 empty_lines: EOL
+  115            | empty_lines EOL
+
+
+Rules useless in parser due to conflicts
+
+   54 exp: telugu_identifier telugu_open_square_bracket exp telugu_closed_square_bracket
+
+   69 condition: exp telugu_logical_operator exp
+
+   78 if_else_ladder: if_statement elif_repeat
+
+  103 print_content: print_content telugu_string
+  105              | print_content telugu_punctuation_comma telugu_string
+
+
+State 0 conflicts: 2 shift/reduce
+State 4 conflicts: 2 shift/reduce
+State 6 conflicts: 4 shift/reduce, 1 reduce/reduce
+State 8 conflicts: 4 shift/reduce, 12 reduce/reduce
+State 13 conflicts: 2 shift/reduce, 12 reduce/reduce
+State 16 conflicts: 9 shift/reduce
+State 17 conflicts: 2 shift/reduce
+State 19 conflicts: 2 shift/reduce
+State 21 conflicts: 2 shift/reduce
+State 22 conflicts: 8 shift/reduce
+State 33 conflicts: 2 shift/reduce, 12 reduce/reduce
+State 40 conflicts: 1 shift/reduce
+State 41 conflicts: 4 shift/reduce, 12 reduce/reduce
+State 42 conflicts: 1 shift/reduce
+State 43 conflicts: 2 shift/reduce
+State 44 conflicts: 2 shift/reduce
+State 49 conflicts: 4 shift/reduce, 12 reduce/reduce
+State 50 conflicts: 4 shift/reduce, 12 reduce/reduce
+State 60 conflicts: 1 shift/reduce
+State 67 conflicts: 1 shift/reduce
+State 68 conflicts: 1 shift/reduce, 14 reduce/reduce
+State 69 conflicts: 8 shift/reduce
+State 70 conflicts: 8 shift/reduce
+State 71 conflicts: 2 shift/reduce
+State 72 conflicts: 2 shift/reduce
+State 73 conflicts: 2 shift/reduce
+State 74 conflicts: 2 shift/reduce
+State 81 conflicts: 1 reduce/reduce
+State 90 conflicts: 1 shift/reduce
+State 99 conflicts: 2 shift/reduce
+State 100 conflicts: 1 shift/reduce
+State 103 conflicts: 1 shift/reduce
+State 107 conflicts: 8 shift/reduce
+State 108 conflicts: 8 shift/reduce
+State 109 conflicts: 8 shift/reduce
+State 110 conflicts: 8 shift/reduce
+State 130 conflicts: 8 shift/reduce
+State 134 conflicts: 9 reduce/reduce
+State 146 conflicts: 8 shift/reduce
+State 149 conflicts: 1 shift/reduce
+State 154 conflicts: 2 shift/reduce
+State 155 conflicts: 2 shift/reduce
+State 160 conflicts: 9 reduce/reduce
+State 162 conflicts: 2 shift/reduce
+State 165 conflicts: 2 shift/reduce, 1 reduce/reduce
+State 166 conflicts: 1 shift/reduce
+State 167 conflicts: 1 shift/reduce
+State 171 conflicts: 1 shift/reduce
+State 172 conflicts: 14 reduce/reduce
+State 176 conflicts: 8 shift/reduce
+State 182 conflicts: 1 shift/reduce
+State 186 conflicts: 1 shift/reduce
+State 192 conflicts: 1 shift/reduce
+State 194 conflicts: 1 shift/reduce
+State 195 conflicts: 1 shift/reduce
+State 196 conflicts: 1 shift/reduce
+State 197 conflicts: 1 shift/reduce
+State 198 conflicts: 1 shift/reduce
+
+
+Grammar
+
+    0 $accept: program $end
+
+    1 program: input
+
+    2 eol: EOL
+
+    3 telugu_identifier: TELUGU_IDENTIFIER
+
+    4 telugu_function_name: TELUGU_IDENTIFIER
+
+    5 telugu_identifier_declaring: TELUGU_IDENTIFIER
+
+    6 telugu_imported_library: TELUGU_IDENTIFIER
+
+    7 telugu_print: TELUGU_PRINT
+
+    8 telugu_int: TELUGU_INT
+
+    9 telugu_input: TELUGU_INPUT
+
+   10 telugu_float: TELUGU_FLOAT
+
+   11 telugu_import: TELUGU_IMPORT
+
+   12 telugu_constant: TELUGU_INT
+   13                | TELUGU_FLOAT
+   14                | TELUGU_STRING
+   15                | TELUGU_CHARACTER
+
+   16 telugu_arithmetic_operator: TELUGU_ARITHMETIC_OPERATOR
+
+   17 telugu_comparison_operator: TELUGU_COMPARISON_OPERATOR
+
+   18 telugu_assignment_operator: TELUGU_ASSIGNMENT_OPERATOR
+
+   19 telugu_logical_operator: TELUGU_LOGICAL_OPERATOR
+
+   20 telugu_datatype: TELUGU_DATATYPE
+
+   21 telugu_if: TELUGU_IF
+
+   22 telugu_elif: TELUGU_ELIF
+
+   23 telugu_else: TELUGU_ELSE
+
+   24 telugu_while: TELUGU_WHILE
+
+   25 telugu_string: TELUGU_STRING
+
+   26 telugu_open_curly_bracket: TELUGU_OPEN_CURLY_BRACKET
+
+   27 telugu_closed_curly_bracket: TELUGU_CLOSED_CURLY_BRACKET
+
+   28 telugu_open_square_bracket: TELUGU_OPEN_SQUARE_BRACKET
+
+   29 telugu_closed_square_bracket: TELUGU_CLOSED_SQUARE_BRACKET
+
+   30 telugu_open_floor_bracket: TELUGU_OPEN_FLOOR_BRACKET
+
+   31 telugu_closed_floor_bracket: TELUGU_CLOSED_FLOOR_BRACKET
+
+   32 telugu_punctuation_comma: TELUGU_PUNCTUATION_COMMA
+
+   33 telugu_finish: TELUGU_FINISH
+
+   34 telugu_function: TELUGU_FUNCTION
+
+   35 telugu_return: TELUGU_RETURN
+
+   36 telugu_character: TELUGU_CHARACTER
+
+   37 input: /* empty */
+   38      | input eol
+   39      | eol input
+   40      | input telugu_import telugu_imported_library telugu_finish
+   41      | telugu_import telugu_imported_library telugu_finish input
+   42      | input bunch_of_statements input
+   43      | input function_declaration input
+
+   44 exp: telugu_int
+   45    | telugu_float
+   46    | telugu_character
+   47    | telugu_string
+   48    | telugu_identifier
+   49    | function_call
+   50    | telugu_identifier telugu_open_square_bracket exp telugu_closed_square_bracket
+   51    | telugu_open_curly_bracket exp telugu_closed_curly_bracket
+   52    | exp telugu_arithmetic_operator exp
+   53    | exp telugu_logical_operator exp
+   54    | telugu_identifier telugu_open_square_bracket exp telugu_closed_square_bracket
+
+   55 bunch_of_statements: /* empty */
+   56                    | eol bunch_of_statements
+   57                    | bunch_of_statements eol
+   58                    | bunch_of_statements if_else_ladder bunch_of_statements
+   59                    | bunch_of_statements telugu_input telugu_open_curly_bracket telugu_identifier telugu_closed_curly_bracket telugu_finish bunch_of_statements
+   60                    | bunch_of_statements while_loop bunch_of_statements
+   61                    | bunch_of_statements print_statement telugu_finish bunch_of_statements
+   62                    | bunch_of_statements variable_declaration telugu_finish bunch_of_statements
+   63                    | bunch_of_statements telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket bunch_of_statements
+   64                    | bunch_of_statements function_call telugu_finish bunch_of_statements
+   65                    | bunch_of_statements equation telugu_finish bunch_of_statements
+   66                    | error telugu_finish
+
+   67 condition: exp
+   68          | exp telugu_comparison_operator exp
+   69          | exp telugu_logical_operator exp
+
+   70 if_statement: telugu_if telugu_open_curly_bracket condition telugu_closed_curly_bracket telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket
+
+   71 elif_repeat: /* empty */
+   72            | eol elif_repeat
+   73            | elif_repeat telugu_elif telugu_open_curly_bracket condition telugu_closed_curly_bracket telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket elif_repeat
+
+   74 else_statement: /* empty */
+   75               | eol else_statement
+   76               | telugu_else telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket
+
+   77 if_else_ladder: if_statement elif_repeat else_statement
+   78               | if_statement elif_repeat
+
+   79 while_loop: telugu_while telugu_open_curly_bracket condition telugu_closed_curly_bracket telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket
+
+   80 variable_declaration: telugu_datatype telugu_identifier_declaring telugu_assignment_operator exp
+   81                     | telugu_datatype telugu_identifier_declaring
+   82                     | telugu_datatype telugu_identifier_declaring telugu_open_square_bracket exp telugu_closed_square_bracket
+
+   83 parameters_repeat: /* empty */
+   84                  | parameters_repeat telugu_datatype telugu_identifier_declaring telugu_punctuation_comma
+
+   85 parameters_line: /* empty */
+   86                | parameters_repeat telugu_datatype telugu_identifier_declaring
+
+   87 identifiers_repeat: /* empty */
+   88                   | telugu_identifier
+   89                   | telugu_constant
+   90                   | telugu_identifier telugu_punctuation_comma identifiers_repeat
+   91                   | telugu_constant telugu_punctuation_comma identifiers_repeat
+
+   92 identifiers_line: identifiers_repeat
+
+   93 $@1: /* empty */
+
+   94 equation: telugu_identifier telugu_assignment_operator $@1 exp
+   95         | telugu_identifier telugu_open_square_bracket exp telugu_closed_square_bracket telugu_assignment_operator exp
+
+   96 function_content: function_content eol
+   97                 | bunch_of_statements
+   98                 | bunch_of_statements telugu_return telugu_finish bunch_of_statements
+   99                 | bunch_of_statements telugu_return exp telugu_finish bunch_of_statements
+
+  100 print_content: /* empty */
+  101              | print_content eol
+  102              | eol print_content
+  103              | print_content telugu_string
+  104              | print_content exp
+  105              | print_content telugu_punctuation_comma telugu_string
+  106              | print_content telugu_punctuation_comma exp
+
+  107 print_statement: telugu_print telugu_open_curly_bracket print_content telugu_closed_curly_bracket
+
+  108 $@2: /* empty */
+
+  109 function_declaration: telugu_function telugu_function_name $@2 telugu_open_curly_bracket parameters_line telugu_closed_curly_bracket telugu_open_floor_bracket function_content telugu_closed_floor_bracket
+
+  110 $@3: /* empty */
+
+  111 function_call: telugu_identifier $@3 telugu_open_curly_bracket identifiers_line telugu_closed_curly_bracket
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+error (256) 66
+EOL (258) 2
+TELUGU_INT (259) 8 12
+TELUGU_FLOAT (260) 10 13
+TELUGU_ARITHMETIC_OPERATOR (261) 16
+TELUGU_COMPARISON_OPERATOR (262) 17
+TELUGU_ASSIGNMENT_OPERATOR (263) 18
+TELUGU_LOGICAL_OPERATOR (264) 19
+TELUGU_DATATYPE (265) 20
+TELUGU_IF (266) 21
+TELUGU_ELIF (267) 22
+TELUGU_ELSE (268) 23
+TELUGU_WHILE (269) 24
+TELUGU_OPEN_FLOOR_BRACKET (270) 30
+TELUGU_CLOSED_FLOOR_BRACKET (271) 31
+TELUGU_IDENTIFIER (272) 3 4 5 6
+TELUGU_STRING (273) 14 25
+TELUGU_OPEN_CURLY_BRACKET (274) 26
+TELUGU_CLOSED_CURLY_BRACKET (275) 27
+TELUGU_OPEN_SQUARE_BRACKET (276) 28
+TELUGU_CLOSED_SQUARE_BRACKET (277) 29
+TELUGU_PUNCTUATION_COMMA (278) 32
+TELUGU_NEWLINE (279)
+TELUGU_FINISH (280) 33
+TELUGU_FUNCTION (281) 34
+TELUGU_RETURN (282) 35
+TELUGU_CHARACTER (283) 15 36
+TELUGU_PRINT (284) 7
+TELUGU_IMPORT (285) 11
+TELUGU_INPUT (286) 9
+
+
+Nonterminals, with rules where they appear
+
+$accept (32)
+    on left: 0
+program (33)
+    on left: 1, on right: 0
+eol (34)
+    on left: 2, on right: 38 39 56 57 72 75 96 101 102
+telugu_identifier (35)
+    on left: 3, on right: 48 50 54 59 88 90 94 95 111
+telugu_function_name (36)
+    on left: 4, on right: 109
+telugu_identifier_declaring (37)
+    on left: 5, on right: 80 81 82 84 86
+telugu_imported_library (38)
+    on left: 6, on right: 40 41
+telugu_print (39)
+    on left: 7, on right: 107
+telugu_int (40)
+    on left: 8, on right: 44
+telugu_input (41)
+    on left: 9, on right: 59
+telugu_float (42)
+    on left: 10, on right: 45
+telugu_import (43)
+    on left: 11, on right: 40 41
+telugu_constant (44)
+    on left: 12 13 14 15, on right: 89 91
+telugu_arithmetic_operator (45)
+    on left: 16, on right: 52
+telugu_comparison_operator (46)
+    on left: 17, on right: 68
+telugu_assignment_operator (47)
+    on left: 18, on right: 80 94 95
+telugu_logical_operator (48)
+    on left: 19, on right: 53 69
+telugu_datatype (49)
+    on left: 20, on right: 80 81 82 84 86
+telugu_if (50)
+    on left: 21, on right: 70
+telugu_elif (51)
+    on left: 22, on right: 73
+telugu_else (52)
+    on left: 23, on right: 76
+telugu_while (53)
+    on left: 24, on right: 79
+telugu_string (54)
+    on left: 25, on right: 47 103 105
+telugu_open_curly_bracket (55)
+    on left: 26, on right: 51 59 70 73 79 107 109 111
+telugu_closed_curly_bracket (56)
+    on left: 27, on right: 51 59 70 73 79 107 109 111
+telugu_open_square_bracket (57)
+    on left: 28, on right: 50 54 82 95
+telugu_closed_square_bracket (58)
+    on left: 29, on right: 50 54 82 95
+telugu_open_floor_bracket (59)
+    on left: 30, on right: 63 70 73 76 79 109
+telugu_closed_floor_bracket (60)
+    on left: 31, on right: 63 70 73 76 79 109
+telugu_punctuation_comma (61)
+    on left: 32, on right: 84 90 91 105 106
+telugu_finish (62)
+    on left: 33, on right: 40 41 59 61 62 64 65 66 98 99
+telugu_function (63)
+    on left: 34, on right: 109
+telugu_return (64)
+    on left: 35, on right: 98 99
+telugu_character (65)
+    on left: 36, on right: 46
+input (66)
+    on left: 37 38 39 40 41 42 43, on right: 1 38 39 40 41 42 43
+exp (67)
+    on left: 44 45 46 47 48 49 50 51 52 53 54, on right: 50 51 52 53
+    54 67 68 69 80 82 94 95 99 104 106
+bunch_of_statements (68)
+    on left: 55 56 57 58 59 60 61 62 63 64 65 66, on right: 42 56 57
+    58 59 60 61 62 63 64 65 70 73 76 79 97 98 99
+condition (69)
+    on left: 67 68 69, on right: 70 73 79
+if_statement (70)
+    on left: 70, on right: 77 78
+elif_repeat (71)
+    on left: 71 72 73, on right: 72 73 77 78
+else_statement (72)
+    on left: 74 75 76, on right: 75 77
+if_else_ladder (73)
+    on left: 77 78, on right: 58
+while_loop (74)
+    on left: 79, on right: 60
+variable_declaration (75)
+    on left: 80 81 82, on right: 62
+parameters_repeat (76)
+    on left: 83 84, on right: 84 86
+parameters_line (77)
+    on left: 85 86, on right: 109
+identifiers_repeat (78)
+    on left: 87 88 89 90 91, on right: 90 91 92
+identifiers_line (79)
+    on left: 92, on right: 111
+equation (80)
+    on left: 94 95, on right: 65
+$@1 (81)
+    on left: 93, on right: 94
+function_content (82)
+    on left: 96 97 98 99, on right: 96 109
+print_content (83)
+    on left: 100 101 102 103 104 105 106, on right: 101 102 103 104
+    105 106 107
+print_statement (84)
+    on left: 107, on right: 61
+function_declaration (85)
+    on left: 109, on right: 43
+$@2 (86)
+    on left: 108, on right: 109
+function_call (87)
+    on left: 111, on right: 49 64
+$@3 (88)
+    on left: 110, on right: 111
+
+
+state 0
+
+    0 $accept: . program $end
+
+    EOL            shift, and go to state 1
+    TELUGU_IMPORT  shift, and go to state 2
+
+    EOL            [reduce using rule 37 (input)]
+    TELUGU_IMPORT  [reduce using rule 37 (input)]
+    $default       reduce using rule 37 (input)
+
+    program        go to state 3
+    eol            go to state 4
+    telugu_import  go to state 5
+    input          go to state 6
+
+
+state 1
+
+    2 eol: EOL .
+
+    $default  reduce using rule 2 (eol)
+
+
+state 2
+
+   11 telugu_import: TELUGU_IMPORT .
+
+    $default  reduce using rule 11 (telugu_import)
+
+
+state 3
+
+    0 $accept: program . $end
+
+    $end  shift, and go to state 7
+
+
+state 4
+
+   39 input: eol . input
+
+    EOL            shift, and go to state 1
+    TELUGU_IMPORT  shift, and go to state 2
+
+    EOL            [reduce using rule 37 (input)]
+    TELUGU_IMPORT  [reduce using rule 37 (input)]
+    $default       reduce using rule 37 (input)
+
+    eol            go to state 4
+    telugu_import  go to state 5
+    input          go to state 8
+
+
+state 5
+
+   41 input: telugu_import . telugu_imported_library telugu_finish input
+
+    TELUGU_IDENTIFIER  shift, and go to state 9
+
+    telugu_imported_library  go to state 10
+
+
+state 6
+
+    1 program: input .
+   38 input: input . eol
+   40      | input . telugu_import telugu_imported_library telugu_finish
+   42      | input . bunch_of_statements input
+   43      | input . function_declaration input
+
+    error            shift, and go to state 11
+    EOL              shift, and go to state 1
+    TELUGU_FUNCTION  shift, and go to state 12
+    TELUGU_IMPORT    shift, and go to state 2
+
+    $end                       reduce using rule 1 (program)
+    $end                       [reduce using rule 55 (bunch_of_statements)]
+    error                      [reduce using rule 55 (bunch_of_statements)]
+    EOL                        [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_DATATYPE            reduce using rule 55 (bunch_of_statements)
+    TELUGU_IF                  reduce using rule 55 (bunch_of_statements)
+    TELUGU_WHILE               reduce using rule 55 (bunch_of_statements)
+    TELUGU_OPEN_FLOOR_BRACKET  reduce using rule 55 (bunch_of_statements)
+    TELUGU_IDENTIFIER          reduce using rule 55 (bunch_of_statements)
+    TELUGU_FUNCTION            [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_PRINT               reduce using rule 55 (bunch_of_statements)
+    TELUGU_IMPORT              [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_INPUT               reduce using rule 55 (bunch_of_statements)
+
+    eol                   go to state 13
+    telugu_import         go to state 14
+    telugu_function       go to state 15
+    bunch_of_statements   go to state 16
+    function_declaration  go to state 17
+
+
+state 7
+
+    0 $accept: program $end .
+
+    $default  accept
+
+
+state 8
+
+   38 input: input . eol
+   39      | eol input .
+   40      | input . telugu_import telugu_imported_library telugu_finish
+   42      | input . bunch_of_statements input
+   43      | input . function_declaration input
+
+    error            shift, and go to state 11
+    EOL              shift, and go to state 1
+    TELUGU_FUNCTION  shift, and go to state 12
+    TELUGU_IMPORT    shift, and go to state 2
+
+    $end                       reduce using rule 39 (input)
+    $end                       [reduce using rule 55 (bunch_of_statements)]
+    error                      [reduce using rule 39 (input)]
+    error                      [reduce using rule 55 (bunch_of_statements)]
+    EOL                        [reduce using rule 39 (input)]
+    EOL                        [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_DATATYPE            reduce using rule 39 (input)
+    TELUGU_DATATYPE            [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_IF                  reduce using rule 39 (input)
+    TELUGU_IF                  [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_WHILE               reduce using rule 39 (input)
+    TELUGU_WHILE               [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_OPEN_FLOOR_BRACKET  reduce using rule 39 (input)
+    TELUGU_OPEN_FLOOR_BRACKET  [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_IDENTIFIER          reduce using rule 39 (input)
+    TELUGU_IDENTIFIER          [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_FUNCTION            [reduce using rule 39 (input)]
+    TELUGU_FUNCTION            [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_PRINT               reduce using rule 39 (input)
+    TELUGU_PRINT               [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_IMPORT              [reduce using rule 39 (input)]
+    TELUGU_IMPORT              [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_INPUT               reduce using rule 39 (input)
+    TELUGU_INPUT               [reduce using rule 55 (bunch_of_statements)]
+
+    eol                   go to state 13
+    telugu_import         go to state 14
+    telugu_function       go to state 15
+    bunch_of_statements   go to state 16
+    function_declaration  go to state 17
+
+
+state 9
+
+    6 telugu_imported_library: TELUGU_IDENTIFIER .
+
+    $default  reduce using rule 6 (telugu_imported_library)
+
+
+state 10
+
+   41 input: telugu_import telugu_imported_library . telugu_finish input
+
+    TELUGU_FINISH  shift, and go to state 18
+
+    telugu_finish  go to state 19
+
+
+state 11
+
+   66 bunch_of_statements: error . telugu_finish
+
+    TELUGU_FINISH  shift, and go to state 18
+
+    telugu_finish  go to state 20
+
+
+state 12
+
+   34 telugu_function: TELUGU_FUNCTION .
+
+    $default  reduce using rule 34 (telugu_function)
+
+
+state 13
+
+   38 input: input eol .
+   56 bunch_of_statements: eol . bunch_of_statements
+
+    error  shift, and go to state 11
+    EOL    shift, and go to state 1
+
+    $end                       reduce using rule 38 (input)
+    $end                       [reduce using rule 55 (bunch_of_statements)]
+    error                      [reduce using rule 38 (input)]
+    error                      [reduce using rule 55 (bunch_of_statements)]
+    EOL                        [reduce using rule 38 (input)]
+    EOL                        [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_DATATYPE            reduce using rule 38 (input)
+    TELUGU_DATATYPE            [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_IF                  reduce using rule 38 (input)
+    TELUGU_IF                  [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_WHILE               reduce using rule 38 (input)
+    TELUGU_WHILE               [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_OPEN_FLOOR_BRACKET  reduce using rule 38 (input)
+    TELUGU_OPEN_FLOOR_BRACKET  [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_IDENTIFIER          reduce using rule 38 (input)
+    TELUGU_IDENTIFIER          [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_FUNCTION            reduce using rule 38 (input)
+    TELUGU_FUNCTION            [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_PRINT               reduce using rule 38 (input)
+    TELUGU_PRINT               [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_IMPORT              reduce using rule 38 (input)
+    TELUGU_IMPORT              [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_INPUT               reduce using rule 38 (input)
+    TELUGU_INPUT               [reduce using rule 55 (bunch_of_statements)]
+
+    eol                  go to state 21
+    bunch_of_statements  go to state 22
+
+
+state 14
+
+   40 input: input telugu_import . telugu_imported_library telugu_finish
+
+    TELUGU_IDENTIFIER  shift, and go to state 9
+
+    telugu_imported_library  go to state 23
+
+
+state 15
+
+  109 function_declaration: telugu_function . telugu_function_name $@2 telugu_open_curly_bracket parameters_line telugu_closed_curly_bracket telugu_open_floor_bracket function_content telugu_closed_floor_bracket
+
+    TELUGU_IDENTIFIER  shift, and go to state 24
+
+    telugu_function_name  go to state 25
+
+
+state 16
+
+   42 input: input bunch_of_statements . input
+   57 bunch_of_statements: bunch_of_statements . eol
+   58                    | bunch_of_statements . if_else_ladder bunch_of_statements
+   59                    | bunch_of_statements . telugu_input telugu_open_curly_bracket telugu_identifier telugu_closed_curly_bracket telugu_finish bunch_of_statements
+   60                    | bunch_of_statements . while_loop bunch_of_statements
+   61                    | bunch_of_statements . print_statement telugu_finish bunch_of_statements
+   62                    | bunch_of_statements . variable_declaration telugu_finish bunch_of_statements
+   63                    | bunch_of_statements . telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket bunch_of_statements
+   64                    | bunch_of_statements . function_call telugu_finish bunch_of_statements
+   65                    | bunch_of_statements . equation telugu_finish bunch_of_statements
+
+    EOL                        shift, and go to state 1
+    TELUGU_DATATYPE            shift, and go to state 26
+    TELUGU_IF                  shift, and go to state 27
+    TELUGU_WHILE               shift, and go to state 28
+    TELUGU_OPEN_FLOOR_BRACKET  shift, and go to state 29
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_PRINT               shift, and go to state 31
+    TELUGU_IMPORT              shift, and go to state 2
+    TELUGU_INPUT               shift, and go to state 32
+
+    EOL                        [reduce using rule 37 (input)]
+    TELUGU_DATATYPE            [reduce using rule 37 (input)]
+    TELUGU_IF                  [reduce using rule 37 (input)]
+    TELUGU_WHILE               [reduce using rule 37 (input)]
+    TELUGU_OPEN_FLOOR_BRACKET  [reduce using rule 37 (input)]
+    TELUGU_IDENTIFIER          [reduce using rule 37 (input)]
+    TELUGU_PRINT               [reduce using rule 37 (input)]
+    TELUGU_IMPORT              [reduce using rule 37 (input)]
+    TELUGU_INPUT               [reduce using rule 37 (input)]
+    $default                   reduce using rule 37 (input)
+
+    eol                        go to state 33
+    telugu_identifier          go to state 34
+    telugu_print               go to state 35
+    telugu_input               go to state 36
+    telugu_import              go to state 5
+    telugu_datatype            go to state 37
+    telugu_if                  go to state 38
+    telugu_while               go to state 39
+    telugu_open_floor_bracket  go to state 40
+    input                      go to state 41
+    if_statement               go to state 42
+    if_else_ladder             go to state 43
+    while_loop                 go to state 44
+    variable_declaration       go to state 45
+    equation                   go to state 46
+    print_statement            go to state 47
+    function_call              go to state 48
+
+
+state 17
+
+   43 input: input function_declaration . input
+
+    EOL            shift, and go to state 1
+    TELUGU_IMPORT  shift, and go to state 2
+
+    EOL            [reduce using rule 37 (input)]
+    TELUGU_IMPORT  [reduce using rule 37 (input)]
+    $default       reduce using rule 37 (input)
+
+    eol            go to state 4
+    telugu_import  go to state 5
+    input          go to state 49
+
+
+state 18
+
+   33 telugu_finish: TELUGU_FINISH .
+
+    $default  reduce using rule 33 (telugu_finish)
+
+
+state 19
+
+   41 input: telugu_import telugu_imported_library telugu_finish . input
+
+    EOL            shift, and go to state 1
+    TELUGU_IMPORT  shift, and go to state 2
+
+    EOL            [reduce using rule 37 (input)]
+    TELUGU_IMPORT  [reduce using rule 37 (input)]
+    $default       reduce using rule 37 (input)
+
+    eol            go to state 4
+    telugu_import  go to state 5
+    input          go to state 50
+
+
+state 20
+
+   66 bunch_of_statements: error telugu_finish .
+
+    $default  reduce using rule 66 (bunch_of_statements)
+
+
+state 21
+
+   56 bunch_of_statements: eol . bunch_of_statements
+
+    error  shift, and go to state 11
+    EOL    shift, and go to state 1
+
+    $end                         reduce using rule 55 (bunch_of_statements)
+    error                        [reduce using rule 55 (bunch_of_statements)]
+    EOL                          [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_DATATYPE              reduce using rule 55 (bunch_of_statements)
+    TELUGU_IF                    reduce using rule 55 (bunch_of_statements)
+    TELUGU_WHILE                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_OPEN_FLOOR_BRACKET    reduce using rule 55 (bunch_of_statements)
+    TELUGU_CLOSED_FLOOR_BRACKET  reduce using rule 55 (bunch_of_statements)
+    TELUGU_IDENTIFIER            reduce using rule 55 (bunch_of_statements)
+    TELUGU_FUNCTION              reduce using rule 55 (bunch_of_statements)
+    TELUGU_RETURN                reduce using rule 55 (bunch_of_statements)
+    TELUGU_PRINT                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_IMPORT                reduce using rule 55 (bunch_of_statements)
+    TELUGU_INPUT                 reduce using rule 55 (bunch_of_statements)
+
+    eol                  go to state 21
+    bunch_of_statements  go to state 22
+
+
+state 22
+
+   56 bunch_of_statements: eol bunch_of_statements .
+   57                    | bunch_of_statements . eol
+   58                    | bunch_of_statements . if_else_ladder bunch_of_statements
+   59                    | bunch_of_statements . telugu_input telugu_open_curly_bracket telugu_identifier telugu_closed_curly_bracket telugu_finish bunch_of_statements
+   60                    | bunch_of_statements . while_loop bunch_of_statements
+   61                    | bunch_of_statements . print_statement telugu_finish bunch_of_statements
+   62                    | bunch_of_statements . variable_declaration telugu_finish bunch_of_statements
+   63                    | bunch_of_statements . telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket bunch_of_statements
+   64                    | bunch_of_statements . function_call telugu_finish bunch_of_statements
+   65                    | bunch_of_statements . equation telugu_finish bunch_of_statements
+
+    EOL                        shift, and go to state 1
+    TELUGU_DATATYPE            shift, and go to state 26
+    TELUGU_IF                  shift, and go to state 27
+    TELUGU_WHILE               shift, and go to state 28
+    TELUGU_OPEN_FLOOR_BRACKET  shift, and go to state 29
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_PRINT               shift, and go to state 31
+    TELUGU_INPUT               shift, and go to state 32
+
+    EOL                        [reduce using rule 56 (bunch_of_statements)]
+    TELUGU_DATATYPE            [reduce using rule 56 (bunch_of_statements)]
+    TELUGU_IF                  [reduce using rule 56 (bunch_of_statements)]
+    TELUGU_WHILE               [reduce using rule 56 (bunch_of_statements)]
+    TELUGU_OPEN_FLOOR_BRACKET  [reduce using rule 56 (bunch_of_statements)]
+    TELUGU_IDENTIFIER          [reduce using rule 56 (bunch_of_statements)]
+    TELUGU_PRINT               [reduce using rule 56 (bunch_of_statements)]
+    TELUGU_INPUT               [reduce using rule 56 (bunch_of_statements)]
+    $default                   reduce using rule 56 (bunch_of_statements)
+
+    eol                        go to state 51
+    telugu_identifier          go to state 34
+    telugu_print               go to state 35
+    telugu_input               go to state 36
+    telugu_datatype            go to state 37
+    telugu_if                  go to state 38
+    telugu_while               go to state 39
+    telugu_open_floor_bracket  go to state 40
+    if_statement               go to state 42
+    if_else_ladder             go to state 43
+    while_loop                 go to state 44
+    variable_declaration       go to state 45
+    equation                   go to state 46
+    print_statement            go to state 47
+    function_call              go to state 48
+
+
+state 23
+
+   40 input: input telugu_import telugu_imported_library . telugu_finish
+
+    TELUGU_FINISH  shift, and go to state 18
+
+    telugu_finish  go to state 52
+
+
+state 24
+
+    4 telugu_function_name: TELUGU_IDENTIFIER .
+
+    $default  reduce using rule 4 (telugu_function_name)
+
+
+state 25
+
+  109 function_declaration: telugu_function telugu_function_name . $@2 telugu_open_curly_bracket parameters_line telugu_closed_curly_bracket telugu_open_floor_bracket function_content telugu_closed_floor_bracket
+
+    $default  reduce using rule 108 ($@2)
+
+    $@2  go to state 53
+
+
+state 26
+
+   20 telugu_datatype: TELUGU_DATATYPE .
+
+    $default  reduce using rule 20 (telugu_datatype)
+
+
+state 27
+
+   21 telugu_if: TELUGU_IF .
+
+    $default  reduce using rule 21 (telugu_if)
+
+
+state 28
+
+   24 telugu_while: TELUGU_WHILE .
+
+    $default  reduce using rule 24 (telugu_while)
+
+
+state 29
+
+   30 telugu_open_floor_bracket: TELUGU_OPEN_FLOOR_BRACKET .
+
+    $default  reduce using rule 30 (telugu_open_floor_bracket)
+
+
+state 30
+
+    3 telugu_identifier: TELUGU_IDENTIFIER .
+
+    $default  reduce using rule 3 (telugu_identifier)
+
+
+state 31
+
+    7 telugu_print: TELUGU_PRINT .
+
+    $default  reduce using rule 7 (telugu_print)
+
+
+state 32
+
+    9 telugu_input: TELUGU_INPUT .
+
+    $default  reduce using rule 9 (telugu_input)
+
+
+state 33
+
+   39 input: eol . input
+   57 bunch_of_statements: bunch_of_statements eol .
+
+    EOL            shift, and go to state 1
+    TELUGU_IMPORT  shift, and go to state 2
+
+    $end                       reduce using rule 37 (input)
+    $end                       [reduce using rule 57 (bunch_of_statements)]
+    error                      reduce using rule 37 (input)
+    error                      [reduce using rule 57 (bunch_of_statements)]
+    EOL                        [reduce using rule 37 (input)]
+    EOL                        [reduce using rule 57 (bunch_of_statements)]
+    TELUGU_DATATYPE            reduce using rule 37 (input)
+    TELUGU_DATATYPE            [reduce using rule 57 (bunch_of_statements)]
+    TELUGU_IF                  reduce using rule 37 (input)
+    TELUGU_IF                  [reduce using rule 57 (bunch_of_statements)]
+    TELUGU_WHILE               reduce using rule 37 (input)
+    TELUGU_WHILE               [reduce using rule 57 (bunch_of_statements)]
+    TELUGU_OPEN_FLOOR_BRACKET  reduce using rule 37 (input)
+    TELUGU_OPEN_FLOOR_BRACKET  [reduce using rule 57 (bunch_of_statements)]
+    TELUGU_IDENTIFIER          reduce using rule 37 (input)
+    TELUGU_IDENTIFIER          [reduce using rule 57 (bunch_of_statements)]
+    TELUGU_FUNCTION            reduce using rule 37 (input)
+    TELUGU_FUNCTION            [reduce using rule 57 (bunch_of_statements)]
+    TELUGU_PRINT               reduce using rule 37 (input)
+    TELUGU_PRINT               [reduce using rule 57 (bunch_of_statements)]
+    TELUGU_IMPORT              [reduce using rule 37 (input)]
+    TELUGU_IMPORT              [reduce using rule 57 (bunch_of_statements)]
+    TELUGU_INPUT               reduce using rule 37 (input)
+    TELUGU_INPUT               [reduce using rule 57 (bunch_of_statements)]
+    $default                   reduce using rule 37 (input)
+
+    eol            go to state 4
+    telugu_import  go to state 5
+    input          go to state 8
+
+
+state 34
+
+   94 equation: telugu_identifier . telugu_assignment_operator $@1 exp
+   95         | telugu_identifier . telugu_open_square_bracket exp telugu_closed_square_bracket telugu_assignment_operator exp
+  111 function_call: telugu_identifier . $@3 telugu_open_curly_bracket identifiers_line telugu_closed_curly_bracket
+
+    TELUGU_ASSIGNMENT_OPERATOR  shift, and go to state 54
+    TELUGU_OPEN_SQUARE_BRACKET  shift, and go to state 55
+
+    $default  reduce using rule 110 ($@3)
+
+    telugu_assignment_operator  go to state 56
+    telugu_open_square_bracket  go to state 57
+    $@3                         go to state 58
+
+
+state 35
+
+  107 print_statement: telugu_print . telugu_open_curly_bracket print_content telugu_closed_curly_bracket
+
+    TELUGU_OPEN_CURLY_BRACKET  shift, and go to state 59
+
+    telugu_open_curly_bracket  go to state 60
+
+
+state 36
+
+   59 bunch_of_statements: bunch_of_statements telugu_input . telugu_open_curly_bracket telugu_identifier telugu_closed_curly_bracket telugu_finish bunch_of_statements
+
+    TELUGU_OPEN_CURLY_BRACKET  shift, and go to state 59
+
+    telugu_open_curly_bracket  go to state 61
+
+
+state 37
+
+   80 variable_declaration: telugu_datatype . telugu_identifier_declaring telugu_assignment_operator exp
+   81                     | telugu_datatype . telugu_identifier_declaring
+   82                     | telugu_datatype . telugu_identifier_declaring telugu_open_square_bracket exp telugu_closed_square_bracket
+
+    TELUGU_IDENTIFIER  shift, and go to state 62
+
+    telugu_identifier_declaring  go to state 63
+
+
+state 38
+
+   70 if_statement: telugu_if . telugu_open_curly_bracket condition telugu_closed_curly_bracket telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket
+
+    TELUGU_OPEN_CURLY_BRACKET  shift, and go to state 59
+
+    telugu_open_curly_bracket  go to state 64
+
+
+state 39
+
+   79 while_loop: telugu_while . telugu_open_curly_bracket condition telugu_closed_curly_bracket telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket
+
+    TELUGU_OPEN_CURLY_BRACKET  shift, and go to state 59
+
+    telugu_open_curly_bracket  go to state 65
+
+
+state 40
+
+   63 bunch_of_statements: bunch_of_statements telugu_open_floor_bracket . bunch_of_statements telugu_closed_floor_bracket bunch_of_statements
+
+    error  shift, and go to state 11
+    EOL    shift, and go to state 1
+
+    EOL                          [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_DATATYPE              reduce using rule 55 (bunch_of_statements)
+    TELUGU_IF                    reduce using rule 55 (bunch_of_statements)
+    TELUGU_WHILE                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_OPEN_FLOOR_BRACKET    reduce using rule 55 (bunch_of_statements)
+    TELUGU_CLOSED_FLOOR_BRACKET  reduce using rule 55 (bunch_of_statements)
+    TELUGU_IDENTIFIER            reduce using rule 55 (bunch_of_statements)
+    TELUGU_PRINT                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_INPUT                 reduce using rule 55 (bunch_of_statements)
+
+    eol                  go to state 21
+    bunch_of_statements  go to state 66
+
+
+state 41
+
+   38 input: input . eol
+   40      | input . telugu_import telugu_imported_library telugu_finish
+   42      | input . bunch_of_statements input
+   42      | input bunch_of_statements input .
+   43      | input . function_declaration input
+
+    error            shift, and go to state 11
+    EOL              shift, and go to state 1
+    TELUGU_FUNCTION  shift, and go to state 12
+    TELUGU_IMPORT    shift, and go to state 2
+
+    $end                       reduce using rule 42 (input)
+    $end                       [reduce using rule 55 (bunch_of_statements)]
+    error                      [reduce using rule 42 (input)]
+    error                      [reduce using rule 55 (bunch_of_statements)]
+    EOL                        [reduce using rule 42 (input)]
+    EOL                        [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_DATATYPE            reduce using rule 42 (input)
+    TELUGU_DATATYPE            [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_IF                  reduce using rule 42 (input)
+    TELUGU_IF                  [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_WHILE               reduce using rule 42 (input)
+    TELUGU_WHILE               [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_OPEN_FLOOR_BRACKET  reduce using rule 42 (input)
+    TELUGU_OPEN_FLOOR_BRACKET  [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_IDENTIFIER          reduce using rule 42 (input)
+    TELUGU_IDENTIFIER          [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_FUNCTION            [reduce using rule 42 (input)]
+    TELUGU_FUNCTION            [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_PRINT               reduce using rule 42 (input)
+    TELUGU_PRINT               [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_IMPORT              [reduce using rule 42 (input)]
+    TELUGU_IMPORT              [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_INPUT               reduce using rule 42 (input)
+    TELUGU_INPUT               [reduce using rule 55 (bunch_of_statements)]
+
+    eol                   go to state 13
+    telugu_import         go to state 14
+    telugu_function       go to state 15
+    bunch_of_statements   go to state 16
+    function_declaration  go to state 17
+
+
+state 42
+
+   77 if_else_ladder: if_statement . elif_repeat else_statement
+   78               | if_statement . elif_repeat
+
+    EOL  shift, and go to state 1
+
+    EOL       [reduce using rule 71 (elif_repeat)]
+    $default  reduce using rule 71 (elif_repeat)
+
+    eol          go to state 67
+    elif_repeat  go to state 68
+
+
+state 43
+
+   58 bunch_of_statements: bunch_of_statements if_else_ladder . bunch_of_statements
+
+    error  shift, and go to state 11
+    EOL    shift, and go to state 1
+
+    $end                         reduce using rule 55 (bunch_of_statements)
+    error                        [reduce using rule 55 (bunch_of_statements)]
+    EOL                          [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_DATATYPE              reduce using rule 55 (bunch_of_statements)
+    TELUGU_IF                    reduce using rule 55 (bunch_of_statements)
+    TELUGU_WHILE                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_OPEN_FLOOR_BRACKET    reduce using rule 55 (bunch_of_statements)
+    TELUGU_CLOSED_FLOOR_BRACKET  reduce using rule 55 (bunch_of_statements)
+    TELUGU_IDENTIFIER            reduce using rule 55 (bunch_of_statements)
+    TELUGU_FUNCTION              reduce using rule 55 (bunch_of_statements)
+    TELUGU_RETURN                reduce using rule 55 (bunch_of_statements)
+    TELUGU_PRINT                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_IMPORT                reduce using rule 55 (bunch_of_statements)
+    TELUGU_INPUT                 reduce using rule 55 (bunch_of_statements)
+
+    eol                  go to state 21
+    bunch_of_statements  go to state 69
+
+
+state 44
+
+   60 bunch_of_statements: bunch_of_statements while_loop . bunch_of_statements
+
+    error  shift, and go to state 11
+    EOL    shift, and go to state 1
+
+    $end                         reduce using rule 55 (bunch_of_statements)
+    error                        [reduce using rule 55 (bunch_of_statements)]
+    EOL                          [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_DATATYPE              reduce using rule 55 (bunch_of_statements)
+    TELUGU_IF                    reduce using rule 55 (bunch_of_statements)
+    TELUGU_WHILE                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_OPEN_FLOOR_BRACKET    reduce using rule 55 (bunch_of_statements)
+    TELUGU_CLOSED_FLOOR_BRACKET  reduce using rule 55 (bunch_of_statements)
+    TELUGU_IDENTIFIER            reduce using rule 55 (bunch_of_statements)
+    TELUGU_FUNCTION              reduce using rule 55 (bunch_of_statements)
+    TELUGU_RETURN                reduce using rule 55 (bunch_of_statements)
+    TELUGU_PRINT                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_IMPORT                reduce using rule 55 (bunch_of_statements)
+    TELUGU_INPUT                 reduce using rule 55 (bunch_of_statements)
+
+    eol                  go to state 21
+    bunch_of_statements  go to state 70
+
+
+state 45
+
+   62 bunch_of_statements: bunch_of_statements variable_declaration . telugu_finish bunch_of_statements
+
+    TELUGU_FINISH  shift, and go to state 18
+
+    telugu_finish  go to state 71
+
+
+state 46
+
+   65 bunch_of_statements: bunch_of_statements equation . telugu_finish bunch_of_statements
+
+    TELUGU_FINISH  shift, and go to state 18
+
+    telugu_finish  go to state 72
+
+
+state 47
+
+   61 bunch_of_statements: bunch_of_statements print_statement . telugu_finish bunch_of_statements
+
+    TELUGU_FINISH  shift, and go to state 18
+
+    telugu_finish  go to state 73
+
+
+state 48
+
+   64 bunch_of_statements: bunch_of_statements function_call . telugu_finish bunch_of_statements
+
+    TELUGU_FINISH  shift, and go to state 18
+
+    telugu_finish  go to state 74
+
+
+state 49
+
+   38 input: input . eol
+   40      | input . telugu_import telugu_imported_library telugu_finish
+   42      | input . bunch_of_statements input
+   43      | input . function_declaration input
+   43      | input function_declaration input .
+
+    error            shift, and go to state 11
+    EOL              shift, and go to state 1
+    TELUGU_FUNCTION  shift, and go to state 12
+    TELUGU_IMPORT    shift, and go to state 2
+
+    $end                       reduce using rule 43 (input)
+    $end                       [reduce using rule 55 (bunch_of_statements)]
+    error                      [reduce using rule 43 (input)]
+    error                      [reduce using rule 55 (bunch_of_statements)]
+    EOL                        [reduce using rule 43 (input)]
+    EOL                        [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_DATATYPE            reduce using rule 43 (input)
+    TELUGU_DATATYPE            [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_IF                  reduce using rule 43 (input)
+    TELUGU_IF                  [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_WHILE               reduce using rule 43 (input)
+    TELUGU_WHILE               [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_OPEN_FLOOR_BRACKET  reduce using rule 43 (input)
+    TELUGU_OPEN_FLOOR_BRACKET  [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_IDENTIFIER          reduce using rule 43 (input)
+    TELUGU_IDENTIFIER          [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_FUNCTION            [reduce using rule 43 (input)]
+    TELUGU_FUNCTION            [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_PRINT               reduce using rule 43 (input)
+    TELUGU_PRINT               [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_IMPORT              [reduce using rule 43 (input)]
+    TELUGU_IMPORT              [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_INPUT               reduce using rule 43 (input)
+    TELUGU_INPUT               [reduce using rule 55 (bunch_of_statements)]
+
+    eol                   go to state 13
+    telugu_import         go to state 14
+    telugu_function       go to state 15
+    bunch_of_statements   go to state 16
+    function_declaration  go to state 17
+
+
+state 50
+
+   38 input: input . eol
+   40      | input . telugu_import telugu_imported_library telugu_finish
+   41      | telugu_import telugu_imported_library telugu_finish input .
+   42      | input . bunch_of_statements input
+   43      | input . function_declaration input
+
+    error            shift, and go to state 11
+    EOL              shift, and go to state 1
+    TELUGU_FUNCTION  shift, and go to state 12
+    TELUGU_IMPORT    shift, and go to state 2
+
+    $end                       reduce using rule 41 (input)
+    $end                       [reduce using rule 55 (bunch_of_statements)]
+    error                      [reduce using rule 41 (input)]
+    error                      [reduce using rule 55 (bunch_of_statements)]
+    EOL                        [reduce using rule 41 (input)]
+    EOL                        [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_DATATYPE            reduce using rule 41 (input)
+    TELUGU_DATATYPE            [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_IF                  reduce using rule 41 (input)
+    TELUGU_IF                  [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_WHILE               reduce using rule 41 (input)
+    TELUGU_WHILE               [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_OPEN_FLOOR_BRACKET  reduce using rule 41 (input)
+    TELUGU_OPEN_FLOOR_BRACKET  [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_IDENTIFIER          reduce using rule 41 (input)
+    TELUGU_IDENTIFIER          [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_FUNCTION            [reduce using rule 41 (input)]
+    TELUGU_FUNCTION            [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_PRINT               reduce using rule 41 (input)
+    TELUGU_PRINT               [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_IMPORT              [reduce using rule 41 (input)]
+    TELUGU_IMPORT              [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_INPUT               reduce using rule 41 (input)
+    TELUGU_INPUT               [reduce using rule 55 (bunch_of_statements)]
+
+    eol                   go to state 13
+    telugu_import         go to state 14
+    telugu_function       go to state 15
+    bunch_of_statements   go to state 16
+    function_declaration  go to state 17
+
+
+state 51
+
+   57 bunch_of_statements: bunch_of_statements eol .
+
+    $default  reduce using rule 57 (bunch_of_statements)
+
+
+state 52
+
+   40 input: input telugu_import telugu_imported_library telugu_finish .
+
+    $default  reduce using rule 40 (input)
+
+
+state 53
+
+  109 function_declaration: telugu_function telugu_function_name $@2 . telugu_open_curly_bracket parameters_line telugu_closed_curly_bracket telugu_open_floor_bracket function_content telugu_closed_floor_bracket
+
+    TELUGU_OPEN_CURLY_BRACKET  shift, and go to state 59
+
+    telugu_open_curly_bracket  go to state 75
+
+
+state 54
+
+   18 telugu_assignment_operator: TELUGU_ASSIGNMENT_OPERATOR .
+
+    $default  reduce using rule 18 (telugu_assignment_operator)
+
+
+state 55
+
+   28 telugu_open_square_bracket: TELUGU_OPEN_SQUARE_BRACKET .
+
+    $default  reduce using rule 28 (telugu_open_square_bracket)
+
+
+state 56
+
+   94 equation: telugu_identifier telugu_assignment_operator . $@1 exp
+
+    $default  reduce using rule 93 ($@1)
+
+    $@1  go to state 76
+
+
+state 57
+
+   95 equation: telugu_identifier telugu_open_square_bracket . exp telugu_closed_square_bracket telugu_assignment_operator exp
+
+    TELUGU_INT                 shift, and go to state 77
+    TELUGU_FLOAT               shift, and go to state 78
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_STRING              shift, and go to state 79
+    TELUGU_OPEN_CURLY_BRACKET  shift, and go to state 59
+    TELUGU_CHARACTER           shift, and go to state 80
+
+    telugu_identifier          go to state 81
+    telugu_int                 go to state 82
+    telugu_float               go to state 83
+    telugu_string              go to state 84
+    telugu_open_curly_bracket  go to state 85
+    telugu_character           go to state 86
+    exp                        go to state 87
+    function_call              go to state 88
+
+
+state 58
+
+  111 function_call: telugu_identifier $@3 . telugu_open_curly_bracket identifiers_line telugu_closed_curly_bracket
+
+    TELUGU_OPEN_CURLY_BRACKET  shift, and go to state 59
+
+    telugu_open_curly_bracket  go to state 89
+
+
+state 59
+
+   26 telugu_open_curly_bracket: TELUGU_OPEN_CURLY_BRACKET .
+
+    $default  reduce using rule 26 (telugu_open_curly_bracket)
+
+
+state 60
+
+  107 print_statement: telugu_print telugu_open_curly_bracket . print_content telugu_closed_curly_bracket
+
+    EOL  shift, and go to state 1
+
+    EOL       [reduce using rule 100 (print_content)]
+    $default  reduce using rule 100 (print_content)
+
+    eol            go to state 90
+    print_content  go to state 91
+
+
+state 61
+
+   59 bunch_of_statements: bunch_of_statements telugu_input telugu_open_curly_bracket . telugu_identifier telugu_closed_curly_bracket telugu_finish bunch_of_statements
+
+    TELUGU_IDENTIFIER  shift, and go to state 30
+
+    telugu_identifier  go to state 92
+
+
+state 62
+
+    5 telugu_identifier_declaring: TELUGU_IDENTIFIER .
+
+    $default  reduce using rule 5 (telugu_identifier_declaring)
+
+
+state 63
+
+   80 variable_declaration: telugu_datatype telugu_identifier_declaring . telugu_assignment_operator exp
+   81                     | telugu_datatype telugu_identifier_declaring .
+   82                     | telugu_datatype telugu_identifier_declaring . telugu_open_square_bracket exp telugu_closed_square_bracket
+
+    TELUGU_ASSIGNMENT_OPERATOR  shift, and go to state 54
+    TELUGU_OPEN_SQUARE_BRACKET  shift, and go to state 55
+
+    $default  reduce using rule 81 (variable_declaration)
+
+    telugu_assignment_operator  go to state 93
+    telugu_open_square_bracket  go to state 94
+
+
+state 64
+
+   70 if_statement: telugu_if telugu_open_curly_bracket . condition telugu_closed_curly_bracket telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket
+
+    TELUGU_INT                 shift, and go to state 77
+    TELUGU_FLOAT               shift, and go to state 78
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_STRING              shift, and go to state 79
+    TELUGU_OPEN_CURLY_BRACKET  shift, and go to state 59
+    TELUGU_CHARACTER           shift, and go to state 80
+
+    telugu_identifier          go to state 81
+    telugu_int                 go to state 82
+    telugu_float               go to state 83
+    telugu_string              go to state 84
+    telugu_open_curly_bracket  go to state 85
+    telugu_character           go to state 86
+    exp                        go to state 95
+    condition                  go to state 96
+    function_call              go to state 88
+
+
+state 65
+
+   79 while_loop: telugu_while telugu_open_curly_bracket . condition telugu_closed_curly_bracket telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket
+
+    TELUGU_INT                 shift, and go to state 77
+    TELUGU_FLOAT               shift, and go to state 78
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_STRING              shift, and go to state 79
+    TELUGU_OPEN_CURLY_BRACKET  shift, and go to state 59
+    TELUGU_CHARACTER           shift, and go to state 80
+
+    telugu_identifier          go to state 81
+    telugu_int                 go to state 82
+    telugu_float               go to state 83
+    telugu_string              go to state 84
+    telugu_open_curly_bracket  go to state 85
+    telugu_character           go to state 86
+    exp                        go to state 95
+    condition                  go to state 97
+    function_call              go to state 88
+
+
+state 66
+
+   57 bunch_of_statements: bunch_of_statements . eol
+   58                    | bunch_of_statements . if_else_ladder bunch_of_statements
+   59                    | bunch_of_statements . telugu_input telugu_open_curly_bracket telugu_identifier telugu_closed_curly_bracket telugu_finish bunch_of_statements
+   60                    | bunch_of_statements . while_loop bunch_of_statements
+   61                    | bunch_of_statements . print_statement telugu_finish bunch_of_statements
+   62                    | bunch_of_statements . variable_declaration telugu_finish bunch_of_statements
+   63                    | bunch_of_statements . telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket bunch_of_statements
+   63                    | bunch_of_statements telugu_open_floor_bracket bunch_of_statements . telugu_closed_floor_bracket bunch_of_statements
+   64                    | bunch_of_statements . function_call telugu_finish bunch_of_statements
+   65                    | bunch_of_statements . equation telugu_finish bunch_of_statements
+
+    EOL                          shift, and go to state 1
+    TELUGU_DATATYPE              shift, and go to state 26
+    TELUGU_IF                    shift, and go to state 27
+    TELUGU_WHILE                 shift, and go to state 28
+    TELUGU_OPEN_FLOOR_BRACKET    shift, and go to state 29
+    TELUGU_CLOSED_FLOOR_BRACKET  shift, and go to state 98
+    TELUGU_IDENTIFIER            shift, and go to state 30
+    TELUGU_PRINT                 shift, and go to state 31
+    TELUGU_INPUT                 shift, and go to state 32
+
+    eol                          go to state 51
+    telugu_identifier            go to state 34
+    telugu_print                 go to state 35
+    telugu_input                 go to state 36
+    telugu_datatype              go to state 37
+    telugu_if                    go to state 38
+    telugu_while                 go to state 39
+    telugu_open_floor_bracket    go to state 40
+    telugu_closed_floor_bracket  go to state 99
+    if_statement                 go to state 42
+    if_else_ladder               go to state 43
+    while_loop                   go to state 44
+    variable_declaration         go to state 45
+    equation                     go to state 46
+    print_statement              go to state 47
+    function_call                go to state 48
+
+
+state 67
+
+   72 elif_repeat: eol . elif_repeat
+
+    EOL  shift, and go to state 1
+
+    EOL       [reduce using rule 71 (elif_repeat)]
+    $default  reduce using rule 71 (elif_repeat)
+
+    eol          go to state 67
+    elif_repeat  go to state 100
+
+
+state 68
+
+   73 elif_repeat: elif_repeat . telugu_elif telugu_open_curly_bracket condition telugu_closed_curly_bracket telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket elif_repeat
+   77 if_else_ladder: if_statement elif_repeat . else_statement
+   78               | if_statement elif_repeat .
+
+    EOL          shift, and go to state 1
+    TELUGU_ELIF  shift, and go to state 101
+    TELUGU_ELSE  shift, and go to state 102
+
+    $end                         reduce using rule 74 (else_statement)
+    $end                         [reduce using rule 78 (if_else_ladder)]
+    error                        reduce using rule 74 (else_statement)
+    error                        [reduce using rule 78 (if_else_ladder)]
+    EOL                          [reduce using rule 74 (else_statement)]
+    EOL                          [reduce using rule 78 (if_else_ladder)]
+    TELUGU_DATATYPE              reduce using rule 74 (else_statement)
+    TELUGU_DATATYPE              [reduce using rule 78 (if_else_ladder)]
+    TELUGU_IF                    reduce using rule 74 (else_statement)
+    TELUGU_IF                    [reduce using rule 78 (if_else_ladder)]
+    TELUGU_WHILE                 reduce using rule 74 (else_statement)
+    TELUGU_WHILE                 [reduce using rule 78 (if_else_ladder)]
+    TELUGU_OPEN_FLOOR_BRACKET    reduce using rule 74 (else_statement)
+    TELUGU_OPEN_FLOOR_BRACKET    [reduce using rule 78 (if_else_ladder)]
+    TELUGU_CLOSED_FLOOR_BRACKET  reduce using rule 74 (else_statement)
+    TELUGU_CLOSED_FLOOR_BRACKET  [reduce using rule 78 (if_else_ladder)]
+    TELUGU_IDENTIFIER            reduce using rule 74 (else_statement)
+    TELUGU_IDENTIFIER            [reduce using rule 78 (if_else_ladder)]
+    TELUGU_FUNCTION              reduce using rule 74 (else_statement)
+    TELUGU_FUNCTION              [reduce using rule 78 (if_else_ladder)]
+    TELUGU_RETURN                reduce using rule 74 (else_statement)
+    TELUGU_RETURN                [reduce using rule 78 (if_else_ladder)]
+    TELUGU_PRINT                 reduce using rule 74 (else_statement)
+    TELUGU_PRINT                 [reduce using rule 78 (if_else_ladder)]
+    TELUGU_IMPORT                reduce using rule 74 (else_statement)
+    TELUGU_IMPORT                [reduce using rule 78 (if_else_ladder)]
+    TELUGU_INPUT                 reduce using rule 74 (else_statement)
+    TELUGU_INPUT                 [reduce using rule 78 (if_else_ladder)]
+    $default                     reduce using rule 74 (else_statement)
+
+    eol             go to state 103
+    telugu_elif     go to state 104
+    telugu_else     go to state 105
+    else_statement  go to state 106
+
+
+state 69
+
+   57 bunch_of_statements: bunch_of_statements . eol
+   58                    | bunch_of_statements . if_else_ladder bunch_of_statements
+   58                    | bunch_of_statements if_else_ladder bunch_of_statements .
+   59                    | bunch_of_statements . telugu_input telugu_open_curly_bracket telugu_identifier telugu_closed_curly_bracket telugu_finish bunch_of_statements
+   60                    | bunch_of_statements . while_loop bunch_of_statements
+   61                    | bunch_of_statements . print_statement telugu_finish bunch_of_statements
+   62                    | bunch_of_statements . variable_declaration telugu_finish bunch_of_statements
+   63                    | bunch_of_statements . telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket bunch_of_statements
+   64                    | bunch_of_statements . function_call telugu_finish bunch_of_statements
+   65                    | bunch_of_statements . equation telugu_finish bunch_of_statements
+
+    EOL                        shift, and go to state 1
+    TELUGU_DATATYPE            shift, and go to state 26
+    TELUGU_IF                  shift, and go to state 27
+    TELUGU_WHILE               shift, and go to state 28
+    TELUGU_OPEN_FLOOR_BRACKET  shift, and go to state 29
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_PRINT               shift, and go to state 31
+    TELUGU_INPUT               shift, and go to state 32
+
+    EOL                        [reduce using rule 58 (bunch_of_statements)]
+    TELUGU_DATATYPE            [reduce using rule 58 (bunch_of_statements)]
+    TELUGU_IF                  [reduce using rule 58 (bunch_of_statements)]
+    TELUGU_WHILE               [reduce using rule 58 (bunch_of_statements)]
+    TELUGU_OPEN_FLOOR_BRACKET  [reduce using rule 58 (bunch_of_statements)]
+    TELUGU_IDENTIFIER          [reduce using rule 58 (bunch_of_statements)]
+    TELUGU_PRINT               [reduce using rule 58 (bunch_of_statements)]
+    TELUGU_INPUT               [reduce using rule 58 (bunch_of_statements)]
+    $default                   reduce using rule 58 (bunch_of_statements)
+
+    eol                        go to state 51
+    telugu_identifier          go to state 34
+    telugu_print               go to state 35
+    telugu_input               go to state 36
+    telugu_datatype            go to state 37
+    telugu_if                  go to state 38
+    telugu_while               go to state 39
+    telugu_open_floor_bracket  go to state 40
+    if_statement               go to state 42
+    if_else_ladder             go to state 43
+    while_loop                 go to state 44
+    variable_declaration       go to state 45
+    equation                   go to state 46
+    print_statement            go to state 47
+    function_call              go to state 48
+
+
+state 70
+
+   57 bunch_of_statements: bunch_of_statements . eol
+   58                    | bunch_of_statements . if_else_ladder bunch_of_statements
+   59                    | bunch_of_statements . telugu_input telugu_open_curly_bracket telugu_identifier telugu_closed_curly_bracket telugu_finish bunch_of_statements
+   60                    | bunch_of_statements . while_loop bunch_of_statements
+   60                    | bunch_of_statements while_loop bunch_of_statements .
+   61                    | bunch_of_statements . print_statement telugu_finish bunch_of_statements
+   62                    | bunch_of_statements . variable_declaration telugu_finish bunch_of_statements
+   63                    | bunch_of_statements . telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket bunch_of_statements
+   64                    | bunch_of_statements . function_call telugu_finish bunch_of_statements
+   65                    | bunch_of_statements . equation telugu_finish bunch_of_statements
+
+    EOL                        shift, and go to state 1
+    TELUGU_DATATYPE            shift, and go to state 26
+    TELUGU_IF                  shift, and go to state 27
+    TELUGU_WHILE               shift, and go to state 28
+    TELUGU_OPEN_FLOOR_BRACKET  shift, and go to state 29
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_PRINT               shift, and go to state 31
+    TELUGU_INPUT               shift, and go to state 32
+
+    EOL                        [reduce using rule 60 (bunch_of_statements)]
+    TELUGU_DATATYPE            [reduce using rule 60 (bunch_of_statements)]
+    TELUGU_IF                  [reduce using rule 60 (bunch_of_statements)]
+    TELUGU_WHILE               [reduce using rule 60 (bunch_of_statements)]
+    TELUGU_OPEN_FLOOR_BRACKET  [reduce using rule 60 (bunch_of_statements)]
+    TELUGU_IDENTIFIER          [reduce using rule 60 (bunch_of_statements)]
+    TELUGU_PRINT               [reduce using rule 60 (bunch_of_statements)]
+    TELUGU_INPUT               [reduce using rule 60 (bunch_of_statements)]
+    $default                   reduce using rule 60 (bunch_of_statements)
+
+    eol                        go to state 51
+    telugu_identifier          go to state 34
+    telugu_print               go to state 35
+    telugu_input               go to state 36
+    telugu_datatype            go to state 37
+    telugu_if                  go to state 38
+    telugu_while               go to state 39
+    telugu_open_floor_bracket  go to state 40
+    if_statement               go to state 42
+    if_else_ladder             go to state 43
+    while_loop                 go to state 44
+    variable_declaration       go to state 45
+    equation                   go to state 46
+    print_statement            go to state 47
+    function_call              go to state 48
+
+
+state 71
+
+   62 bunch_of_statements: bunch_of_statements variable_declaration telugu_finish . bunch_of_statements
+
+    error  shift, and go to state 11
+    EOL    shift, and go to state 1
+
+    $end                         reduce using rule 55 (bunch_of_statements)
+    error                        [reduce using rule 55 (bunch_of_statements)]
+    EOL                          [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_DATATYPE              reduce using rule 55 (bunch_of_statements)
+    TELUGU_IF                    reduce using rule 55 (bunch_of_statements)
+    TELUGU_WHILE                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_OPEN_FLOOR_BRACKET    reduce using rule 55 (bunch_of_statements)
+    TELUGU_CLOSED_FLOOR_BRACKET  reduce using rule 55 (bunch_of_statements)
+    TELUGU_IDENTIFIER            reduce using rule 55 (bunch_of_statements)
+    TELUGU_FUNCTION              reduce using rule 55 (bunch_of_statements)
+    TELUGU_RETURN                reduce using rule 55 (bunch_of_statements)
+    TELUGU_PRINT                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_IMPORT                reduce using rule 55 (bunch_of_statements)
+    TELUGU_INPUT                 reduce using rule 55 (bunch_of_statements)
+
+    eol                  go to state 21
+    bunch_of_statements  go to state 107
+
+
+state 72
+
+   65 bunch_of_statements: bunch_of_statements equation telugu_finish . bunch_of_statements
+
+    error  shift, and go to state 11
+    EOL    shift, and go to state 1
+
+    $end                         reduce using rule 55 (bunch_of_statements)
+    error                        [reduce using rule 55 (bunch_of_statements)]
+    EOL                          [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_DATATYPE              reduce using rule 55 (bunch_of_statements)
+    TELUGU_IF                    reduce using rule 55 (bunch_of_statements)
+    TELUGU_WHILE                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_OPEN_FLOOR_BRACKET    reduce using rule 55 (bunch_of_statements)
+    TELUGU_CLOSED_FLOOR_BRACKET  reduce using rule 55 (bunch_of_statements)
+    TELUGU_IDENTIFIER            reduce using rule 55 (bunch_of_statements)
+    TELUGU_FUNCTION              reduce using rule 55 (bunch_of_statements)
+    TELUGU_RETURN                reduce using rule 55 (bunch_of_statements)
+    TELUGU_PRINT                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_IMPORT                reduce using rule 55 (bunch_of_statements)
+    TELUGU_INPUT                 reduce using rule 55 (bunch_of_statements)
+
+    eol                  go to state 21
+    bunch_of_statements  go to state 108
+
+
+state 73
+
+   61 bunch_of_statements: bunch_of_statements print_statement telugu_finish . bunch_of_statements
+
+    error  shift, and go to state 11
+    EOL    shift, and go to state 1
+
+    $end                         reduce using rule 55 (bunch_of_statements)
+    error                        [reduce using rule 55 (bunch_of_statements)]
+    EOL                          [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_DATATYPE              reduce using rule 55 (bunch_of_statements)
+    TELUGU_IF                    reduce using rule 55 (bunch_of_statements)
+    TELUGU_WHILE                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_OPEN_FLOOR_BRACKET    reduce using rule 55 (bunch_of_statements)
+    TELUGU_CLOSED_FLOOR_BRACKET  reduce using rule 55 (bunch_of_statements)
+    TELUGU_IDENTIFIER            reduce using rule 55 (bunch_of_statements)
+    TELUGU_FUNCTION              reduce using rule 55 (bunch_of_statements)
+    TELUGU_RETURN                reduce using rule 55 (bunch_of_statements)
+    TELUGU_PRINT                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_IMPORT                reduce using rule 55 (bunch_of_statements)
+    TELUGU_INPUT                 reduce using rule 55 (bunch_of_statements)
+
+    eol                  go to state 21
+    bunch_of_statements  go to state 109
+
+
+state 74
+
+   64 bunch_of_statements: bunch_of_statements function_call telugu_finish . bunch_of_statements
+
+    error  shift, and go to state 11
+    EOL    shift, and go to state 1
+
+    $end                         reduce using rule 55 (bunch_of_statements)
+    error                        [reduce using rule 55 (bunch_of_statements)]
+    EOL                          [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_DATATYPE              reduce using rule 55 (bunch_of_statements)
+    TELUGU_IF                    reduce using rule 55 (bunch_of_statements)
+    TELUGU_WHILE                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_OPEN_FLOOR_BRACKET    reduce using rule 55 (bunch_of_statements)
+    TELUGU_CLOSED_FLOOR_BRACKET  reduce using rule 55 (bunch_of_statements)
+    TELUGU_IDENTIFIER            reduce using rule 55 (bunch_of_statements)
+    TELUGU_FUNCTION              reduce using rule 55 (bunch_of_statements)
+    TELUGU_RETURN                reduce using rule 55 (bunch_of_statements)
+    TELUGU_PRINT                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_IMPORT                reduce using rule 55 (bunch_of_statements)
+    TELUGU_INPUT                 reduce using rule 55 (bunch_of_statements)
+
+    eol                  go to state 21
+    bunch_of_statements  go to state 110
+
+
+state 75
+
+  109 function_declaration: telugu_function telugu_function_name $@2 telugu_open_curly_bracket . parameters_line telugu_closed_curly_bracket telugu_open_floor_bracket function_content telugu_closed_floor_bracket
+
+    TELUGU_CLOSED_CURLY_BRACKET  reduce using rule 85 (parameters_line)
+    $default                     reduce using rule 83 (parameters_repeat)
+
+    parameters_repeat  go to state 111
+    parameters_line    go to state 112
+
+
+state 76
+
+   94 equation: telugu_identifier telugu_assignment_operator $@1 . exp
+
+    TELUGU_INT                 shift, and go to state 77
+    TELUGU_FLOAT               shift, and go to state 78
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_STRING              shift, and go to state 79
+    TELUGU_OPEN_CURLY_BRACKET  shift, and go to state 59
+    TELUGU_CHARACTER           shift, and go to state 80
+
+    telugu_identifier          go to state 81
+    telugu_int                 go to state 82
+    telugu_float               go to state 83
+    telugu_string              go to state 84
+    telugu_open_curly_bracket  go to state 85
+    telugu_character           go to state 86
+    exp                        go to state 113
+    function_call              go to state 88
+
+
+state 77
+
+    8 telugu_int: TELUGU_INT .
+
+    $default  reduce using rule 8 (telugu_int)
+
+
+state 78
+
+   10 telugu_float: TELUGU_FLOAT .
+
+    $default  reduce using rule 10 (telugu_float)
+
+
+state 79
+
+   25 telugu_string: TELUGU_STRING .
+
+    $default  reduce using rule 25 (telugu_string)
+
+
+state 80
+
+   36 telugu_character: TELUGU_CHARACTER .
+
+    $default  reduce using rule 36 (telugu_character)
+
+
+state 81
+
+   48 exp: telugu_identifier .
+   50    | telugu_identifier . telugu_open_square_bracket exp telugu_closed_square_bracket
+   54    | telugu_identifier . telugu_open_square_bracket exp telugu_closed_square_bracket
+  111 function_call: telugu_identifier . $@3 telugu_open_curly_bracket identifiers_line telugu_closed_curly_bracket
+
+    TELUGU_OPEN_SQUARE_BRACKET  shift, and go to state 55
+
+    TELUGU_OPEN_CURLY_BRACKET  reduce using rule 48 (exp)
+    TELUGU_OPEN_CURLY_BRACKET  [reduce using rule 110 ($@3)]
+    $default                   reduce using rule 48 (exp)
+
+    telugu_open_square_bracket  go to state 114
+    $@3                         go to state 58
+
+
+state 82
+
+   44 exp: telugu_int .
+
+    $default  reduce using rule 44 (exp)
+
+
+state 83
+
+   45 exp: telugu_float .
+
+    $default  reduce using rule 45 (exp)
+
+
+state 84
+
+   47 exp: telugu_string .
+
+    $default  reduce using rule 47 (exp)
+
+
+state 85
+
+   51 exp: telugu_open_curly_bracket . exp telugu_closed_curly_bracket
+
+    TELUGU_INT                 shift, and go to state 77
+    TELUGU_FLOAT               shift, and go to state 78
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_STRING              shift, and go to state 79
+    TELUGU_OPEN_CURLY_BRACKET  shift, and go to state 59
+    TELUGU_CHARACTER           shift, and go to state 80
+
+    telugu_identifier          go to state 81
+    telugu_int                 go to state 82
+    telugu_float               go to state 83
+    telugu_string              go to state 84
+    telugu_open_curly_bracket  go to state 85
+    telugu_character           go to state 86
+    exp                        go to state 115
+    function_call              go to state 88
+
+
+state 86
+
+   46 exp: telugu_character .
+
+    $default  reduce using rule 46 (exp)
+
+
+state 87
+
+   52 exp: exp . telugu_arithmetic_operator exp
+   53    | exp . telugu_logical_operator exp
+   95 equation: telugu_identifier telugu_open_square_bracket exp . telugu_closed_square_bracket telugu_assignment_operator exp
+
+    TELUGU_ARITHMETIC_OPERATOR    shift, and go to state 116
+    TELUGU_LOGICAL_OPERATOR       shift, and go to state 117
+    TELUGU_CLOSED_SQUARE_BRACKET  shift, and go to state 118
+
+    telugu_arithmetic_operator    go to state 119
+    telugu_logical_operator       go to state 120
+    telugu_closed_square_bracket  go to state 121
+
+
+state 88
+
+   49 exp: function_call .
+
+    $default  reduce using rule 49 (exp)
+
+
+state 89
+
+  111 function_call: telugu_identifier $@3 telugu_open_curly_bracket . identifiers_line telugu_closed_curly_bracket
+
+    TELUGU_INT         shift, and go to state 122
+    TELUGU_FLOAT       shift, and go to state 123
+    TELUGU_IDENTIFIER  shift, and go to state 30
+    TELUGU_STRING      shift, and go to state 124
+    TELUGU_CHARACTER   shift, and go to state 125
+
+    $default  reduce using rule 87 (identifiers_repeat)
+
+    telugu_identifier   go to state 126
+    telugu_constant     go to state 127
+    identifiers_repeat  go to state 128
+    identifiers_line    go to state 129
+
+
+state 90
+
+  102 print_content: eol . print_content
+
+    EOL  shift, and go to state 1
+
+    EOL       [reduce using rule 100 (print_content)]
+    $default  reduce using rule 100 (print_content)
+
+    eol            go to state 90
+    print_content  go to state 130
+
+
+state 91
+
+  101 print_content: print_content . eol
+  103              | print_content . telugu_string
+  104              | print_content . exp
+  105              | print_content . telugu_punctuation_comma telugu_string
+  106              | print_content . telugu_punctuation_comma exp
+  107 print_statement: telugu_print telugu_open_curly_bracket print_content . telugu_closed_curly_bracket
+
+    EOL                          shift, and go to state 1
+    TELUGU_INT                   shift, and go to state 77
+    TELUGU_FLOAT                 shift, and go to state 78
+    TELUGU_IDENTIFIER            shift, and go to state 30
+    TELUGU_STRING                shift, and go to state 79
+    TELUGU_OPEN_CURLY_BRACKET    shift, and go to state 59
+    TELUGU_CLOSED_CURLY_BRACKET  shift, and go to state 131
+    TELUGU_PUNCTUATION_COMMA     shift, and go to state 132
+    TELUGU_CHARACTER             shift, and go to state 80
+
+    eol                          go to state 133
+    telugu_identifier            go to state 81
+    telugu_int                   go to state 82
+    telugu_float                 go to state 83
+    telugu_string                go to state 134
+    telugu_open_curly_bracket    go to state 85
+    telugu_closed_curly_bracket  go to state 135
+    telugu_punctuation_comma     go to state 136
+    telugu_character             go to state 86
+    exp                          go to state 137
+    function_call                go to state 88
+
+
+state 92
+
+   59 bunch_of_statements: bunch_of_statements telugu_input telugu_open_curly_bracket telugu_identifier . telugu_closed_curly_bracket telugu_finish bunch_of_statements
+
+    TELUGU_CLOSED_CURLY_BRACKET  shift, and go to state 131
+
+    telugu_closed_curly_bracket  go to state 138
+
+
+state 93
+
+   80 variable_declaration: telugu_datatype telugu_identifier_declaring telugu_assignment_operator . exp
+
+    TELUGU_INT                 shift, and go to state 77
+    TELUGU_FLOAT               shift, and go to state 78
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_STRING              shift, and go to state 79
+    TELUGU_OPEN_CURLY_BRACKET  shift, and go to state 59
+    TELUGU_CHARACTER           shift, and go to state 80
+
+    telugu_identifier          go to state 81
+    telugu_int                 go to state 82
+    telugu_float               go to state 83
+    telugu_string              go to state 84
+    telugu_open_curly_bracket  go to state 85
+    telugu_character           go to state 86
+    exp                        go to state 139
+    function_call              go to state 88
+
+
+state 94
+
+   82 variable_declaration: telugu_datatype telugu_identifier_declaring telugu_open_square_bracket . exp telugu_closed_square_bracket
+
+    TELUGU_INT                 shift, and go to state 77
+    TELUGU_FLOAT               shift, and go to state 78
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_STRING              shift, and go to state 79
+    TELUGU_OPEN_CURLY_BRACKET  shift, and go to state 59
+    TELUGU_CHARACTER           shift, and go to state 80
+
+    telugu_identifier          go to state 81
+    telugu_int                 go to state 82
+    telugu_float               go to state 83
+    telugu_string              go to state 84
+    telugu_open_curly_bracket  go to state 85
+    telugu_character           go to state 86
+    exp                        go to state 140
+    function_call              go to state 88
+
+
+state 95
+
+   52 exp: exp . telugu_arithmetic_operator exp
+   53    | exp . telugu_logical_operator exp
+   67 condition: exp .
+   68          | exp . telugu_comparison_operator exp
+   69          | exp . telugu_logical_operator exp
+
+    TELUGU_ARITHMETIC_OPERATOR  shift, and go to state 116
+    TELUGU_COMPARISON_OPERATOR  shift, and go to state 141
+    TELUGU_LOGICAL_OPERATOR     shift, and go to state 117
+
+    $default  reduce using rule 67 (condition)
+
+    telugu_arithmetic_operator  go to state 119
+    telugu_comparison_operator  go to state 142
+    telugu_logical_operator     go to state 143
+
+
+state 96
+
+   70 if_statement: telugu_if telugu_open_curly_bracket condition . telugu_closed_curly_bracket telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket
+
+    TELUGU_CLOSED_CURLY_BRACKET  shift, and go to state 131
+
+    telugu_closed_curly_bracket  go to state 144
+
+
+state 97
+
+   79 while_loop: telugu_while telugu_open_curly_bracket condition . telugu_closed_curly_bracket telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket
+
+    TELUGU_CLOSED_CURLY_BRACKET  shift, and go to state 131
+
+    telugu_closed_curly_bracket  go to state 145
+
+
+state 98
+
+   31 telugu_closed_floor_bracket: TELUGU_CLOSED_FLOOR_BRACKET .
+
+    $default  reduce using rule 31 (telugu_closed_floor_bracket)
+
+
+state 99
+
+   63 bunch_of_statements: bunch_of_statements telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket . bunch_of_statements
+
+    error  shift, and go to state 11
+    EOL    shift, and go to state 1
+
+    $end                         reduce using rule 55 (bunch_of_statements)
+    error                        [reduce using rule 55 (bunch_of_statements)]
+    EOL                          [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_DATATYPE              reduce using rule 55 (bunch_of_statements)
+    TELUGU_IF                    reduce using rule 55 (bunch_of_statements)
+    TELUGU_WHILE                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_OPEN_FLOOR_BRACKET    reduce using rule 55 (bunch_of_statements)
+    TELUGU_CLOSED_FLOOR_BRACKET  reduce using rule 55 (bunch_of_statements)
+    TELUGU_IDENTIFIER            reduce using rule 55 (bunch_of_statements)
+    TELUGU_FUNCTION              reduce using rule 55 (bunch_of_statements)
+    TELUGU_RETURN                reduce using rule 55 (bunch_of_statements)
+    TELUGU_PRINT                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_IMPORT                reduce using rule 55 (bunch_of_statements)
+    TELUGU_INPUT                 reduce using rule 55 (bunch_of_statements)
+
+    eol                  go to state 21
+    bunch_of_statements  go to state 146
+
+
+state 100
+
+   72 elif_repeat: eol elif_repeat .
+   73            | elif_repeat . telugu_elif telugu_open_curly_bracket condition telugu_closed_curly_bracket telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket elif_repeat
+
+    TELUGU_ELIF  shift, and go to state 101
+
+    TELUGU_ELIF  [reduce using rule 72 (elif_repeat)]
+    $default     reduce using rule 72 (elif_repeat)
+
+    telugu_elif  go to state 104
+
+
+state 101
+
+   22 telugu_elif: TELUGU_ELIF .
+
+    $default  reduce using rule 22 (telugu_elif)
+
+
+state 102
+
+   23 telugu_else: TELUGU_ELSE .
+
+    $default  reduce using rule 23 (telugu_else)
+
+
+state 103
+
+   75 else_statement: eol . else_statement
+
+    EOL          shift, and go to state 1
+    TELUGU_ELSE  shift, and go to state 102
+
+    EOL       [reduce using rule 74 (else_statement)]
+    $default  reduce using rule 74 (else_statement)
+
+    eol             go to state 103
+    telugu_else     go to state 105
+    else_statement  go to state 147
+
+
+state 104
+
+   73 elif_repeat: elif_repeat telugu_elif . telugu_open_curly_bracket condition telugu_closed_curly_bracket telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket elif_repeat
+
+    TELUGU_OPEN_CURLY_BRACKET  shift, and go to state 59
+
+    telugu_open_curly_bracket  go to state 148
+
+
+state 105
+
+   76 else_statement: telugu_else . telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket
+
+    TELUGU_OPEN_FLOOR_BRACKET  shift, and go to state 29
+
+    telugu_open_floor_bracket  go to state 149
+
+
+state 106
+
+   77 if_else_ladder: if_statement elif_repeat else_statement .
+
+    $default  reduce using rule 77 (if_else_ladder)
+
+
+state 107
+
+   57 bunch_of_statements: bunch_of_statements . eol
+   58                    | bunch_of_statements . if_else_ladder bunch_of_statements
+   59                    | bunch_of_statements . telugu_input telugu_open_curly_bracket telugu_identifier telugu_closed_curly_bracket telugu_finish bunch_of_statements
+   60                    | bunch_of_statements . while_loop bunch_of_statements
+   61                    | bunch_of_statements . print_statement telugu_finish bunch_of_statements
+   62                    | bunch_of_statements . variable_declaration telugu_finish bunch_of_statements
+   62                    | bunch_of_statements variable_declaration telugu_finish bunch_of_statements .
+   63                    | bunch_of_statements . telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket bunch_of_statements
+   64                    | bunch_of_statements . function_call telugu_finish bunch_of_statements
+   65                    | bunch_of_statements . equation telugu_finish bunch_of_statements
+
+    EOL                        shift, and go to state 1
+    TELUGU_DATATYPE            shift, and go to state 26
+    TELUGU_IF                  shift, and go to state 27
+    TELUGU_WHILE               shift, and go to state 28
+    TELUGU_OPEN_FLOOR_BRACKET  shift, and go to state 29
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_PRINT               shift, and go to state 31
+    TELUGU_INPUT               shift, and go to state 32
+
+    EOL                        [reduce using rule 62 (bunch_of_statements)]
+    TELUGU_DATATYPE            [reduce using rule 62 (bunch_of_statements)]
+    TELUGU_IF                  [reduce using rule 62 (bunch_of_statements)]
+    TELUGU_WHILE               [reduce using rule 62 (bunch_of_statements)]
+    TELUGU_OPEN_FLOOR_BRACKET  [reduce using rule 62 (bunch_of_statements)]
+    TELUGU_IDENTIFIER          [reduce using rule 62 (bunch_of_statements)]
+    TELUGU_PRINT               [reduce using rule 62 (bunch_of_statements)]
+    TELUGU_INPUT               [reduce using rule 62 (bunch_of_statements)]
+    $default                   reduce using rule 62 (bunch_of_statements)
+
+    eol                        go to state 51
+    telugu_identifier          go to state 34
+    telugu_print               go to state 35
+    telugu_input               go to state 36
+    telugu_datatype            go to state 37
+    telugu_if                  go to state 38
+    telugu_while               go to state 39
+    telugu_open_floor_bracket  go to state 40
+    if_statement               go to state 42
+    if_else_ladder             go to state 43
+    while_loop                 go to state 44
+    variable_declaration       go to state 45
+    equation                   go to state 46
+    print_statement            go to state 47
+    function_call              go to state 48
+
+
+state 108
+
+   57 bunch_of_statements: bunch_of_statements . eol
+   58                    | bunch_of_statements . if_else_ladder bunch_of_statements
+   59                    | bunch_of_statements . telugu_input telugu_open_curly_bracket telugu_identifier telugu_closed_curly_bracket telugu_finish bunch_of_statements
+   60                    | bunch_of_statements . while_loop bunch_of_statements
+   61                    | bunch_of_statements . print_statement telugu_finish bunch_of_statements
+   62                    | bunch_of_statements . variable_declaration telugu_finish bunch_of_statements
+   63                    | bunch_of_statements . telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket bunch_of_statements
+   64                    | bunch_of_statements . function_call telugu_finish bunch_of_statements
+   65                    | bunch_of_statements . equation telugu_finish bunch_of_statements
+   65                    | bunch_of_statements equation telugu_finish bunch_of_statements .
+
+    EOL                        shift, and go to state 1
+    TELUGU_DATATYPE            shift, and go to state 26
+    TELUGU_IF                  shift, and go to state 27
+    TELUGU_WHILE               shift, and go to state 28
+    TELUGU_OPEN_FLOOR_BRACKET  shift, and go to state 29
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_PRINT               shift, and go to state 31
+    TELUGU_INPUT               shift, and go to state 32
+
+    EOL                        [reduce using rule 65 (bunch_of_statements)]
+    TELUGU_DATATYPE            [reduce using rule 65 (bunch_of_statements)]
+    TELUGU_IF                  [reduce using rule 65 (bunch_of_statements)]
+    TELUGU_WHILE               [reduce using rule 65 (bunch_of_statements)]
+    TELUGU_OPEN_FLOOR_BRACKET  [reduce using rule 65 (bunch_of_statements)]
+    TELUGU_IDENTIFIER          [reduce using rule 65 (bunch_of_statements)]
+    TELUGU_PRINT               [reduce using rule 65 (bunch_of_statements)]
+    TELUGU_INPUT               [reduce using rule 65 (bunch_of_statements)]
+    $default                   reduce using rule 65 (bunch_of_statements)
+
+    eol                        go to state 51
+    telugu_identifier          go to state 34
+    telugu_print               go to state 35
+    telugu_input               go to state 36
+    telugu_datatype            go to state 37
+    telugu_if                  go to state 38
+    telugu_while               go to state 39
+    telugu_open_floor_bracket  go to state 40
+    if_statement               go to state 42
+    if_else_ladder             go to state 43
+    while_loop                 go to state 44
+    variable_declaration       go to state 45
+    equation                   go to state 46
+    print_statement            go to state 47
+    function_call              go to state 48
+
+
+state 109
+
+   57 bunch_of_statements: bunch_of_statements . eol
+   58                    | bunch_of_statements . if_else_ladder bunch_of_statements
+   59                    | bunch_of_statements . telugu_input telugu_open_curly_bracket telugu_identifier telugu_closed_curly_bracket telugu_finish bunch_of_statements
+   60                    | bunch_of_statements . while_loop bunch_of_statements
+   61                    | bunch_of_statements . print_statement telugu_finish bunch_of_statements
+   61                    | bunch_of_statements print_statement telugu_finish bunch_of_statements .
+   62                    | bunch_of_statements . variable_declaration telugu_finish bunch_of_statements
+   63                    | bunch_of_statements . telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket bunch_of_statements
+   64                    | bunch_of_statements . function_call telugu_finish bunch_of_statements
+   65                    | bunch_of_statements . equation telugu_finish bunch_of_statements
+
+    EOL                        shift, and go to state 1
+    TELUGU_DATATYPE            shift, and go to state 26
+    TELUGU_IF                  shift, and go to state 27
+    TELUGU_WHILE               shift, and go to state 28
+    TELUGU_OPEN_FLOOR_BRACKET  shift, and go to state 29
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_PRINT               shift, and go to state 31
+    TELUGU_INPUT               shift, and go to state 32
+
+    EOL                        [reduce using rule 61 (bunch_of_statements)]
+    TELUGU_DATATYPE            [reduce using rule 61 (bunch_of_statements)]
+    TELUGU_IF                  [reduce using rule 61 (bunch_of_statements)]
+    TELUGU_WHILE               [reduce using rule 61 (bunch_of_statements)]
+    TELUGU_OPEN_FLOOR_BRACKET  [reduce using rule 61 (bunch_of_statements)]
+    TELUGU_IDENTIFIER          [reduce using rule 61 (bunch_of_statements)]
+    TELUGU_PRINT               [reduce using rule 61 (bunch_of_statements)]
+    TELUGU_INPUT               [reduce using rule 61 (bunch_of_statements)]
+    $default                   reduce using rule 61 (bunch_of_statements)
+
+    eol                        go to state 51
+    telugu_identifier          go to state 34
+    telugu_print               go to state 35
+    telugu_input               go to state 36
+    telugu_datatype            go to state 37
+    telugu_if                  go to state 38
+    telugu_while               go to state 39
+    telugu_open_floor_bracket  go to state 40
+    if_statement               go to state 42
+    if_else_ladder             go to state 43
+    while_loop                 go to state 44
+    variable_declaration       go to state 45
+    equation                   go to state 46
+    print_statement            go to state 47
+    function_call              go to state 48
+
+
+state 110
+
+   57 bunch_of_statements: bunch_of_statements . eol
+   58                    | bunch_of_statements . if_else_ladder bunch_of_statements
+   59                    | bunch_of_statements . telugu_input telugu_open_curly_bracket telugu_identifier telugu_closed_curly_bracket telugu_finish bunch_of_statements
+   60                    | bunch_of_statements . while_loop bunch_of_statements
+   61                    | bunch_of_statements . print_statement telugu_finish bunch_of_statements
+   62                    | bunch_of_statements . variable_declaration telugu_finish bunch_of_statements
+   63                    | bunch_of_statements . telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket bunch_of_statements
+   64                    | bunch_of_statements . function_call telugu_finish bunch_of_statements
+   64                    | bunch_of_statements function_call telugu_finish bunch_of_statements .
+   65                    | bunch_of_statements . equation telugu_finish bunch_of_statements
+
+    EOL                        shift, and go to state 1
+    TELUGU_DATATYPE            shift, and go to state 26
+    TELUGU_IF                  shift, and go to state 27
+    TELUGU_WHILE               shift, and go to state 28
+    TELUGU_OPEN_FLOOR_BRACKET  shift, and go to state 29
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_PRINT               shift, and go to state 31
+    TELUGU_INPUT               shift, and go to state 32
+
+    EOL                        [reduce using rule 64 (bunch_of_statements)]
+    TELUGU_DATATYPE            [reduce using rule 64 (bunch_of_statements)]
+    TELUGU_IF                  [reduce using rule 64 (bunch_of_statements)]
+    TELUGU_WHILE               [reduce using rule 64 (bunch_of_statements)]
+    TELUGU_OPEN_FLOOR_BRACKET  [reduce using rule 64 (bunch_of_statements)]
+    TELUGU_IDENTIFIER          [reduce using rule 64 (bunch_of_statements)]
+    TELUGU_PRINT               [reduce using rule 64 (bunch_of_statements)]
+    TELUGU_INPUT               [reduce using rule 64 (bunch_of_statements)]
+    $default                   reduce using rule 64 (bunch_of_statements)
+
+    eol                        go to state 51
+    telugu_identifier          go to state 34
+    telugu_print               go to state 35
+    telugu_input               go to state 36
+    telugu_datatype            go to state 37
+    telugu_if                  go to state 38
+    telugu_while               go to state 39
+    telugu_open_floor_bracket  go to state 40
+    if_statement               go to state 42
+    if_else_ladder             go to state 43
+    while_loop                 go to state 44
+    variable_declaration       go to state 45
+    equation                   go to state 46
+    print_statement            go to state 47
+    function_call              go to state 48
+
+
+state 111
+
+   84 parameters_repeat: parameters_repeat . telugu_datatype telugu_identifier_declaring telugu_punctuation_comma
+   86 parameters_line: parameters_repeat . telugu_datatype telugu_identifier_declaring
+
+    TELUGU_DATATYPE  shift, and go to state 26
+
+    telugu_datatype  go to state 150
+
+
+state 112
+
+  109 function_declaration: telugu_function telugu_function_name $@2 telugu_open_curly_bracket parameters_line . telugu_closed_curly_bracket telugu_open_floor_bracket function_content telugu_closed_floor_bracket
+
+    TELUGU_CLOSED_CURLY_BRACKET  shift, and go to state 131
+
+    telugu_closed_curly_bracket  go to state 151
+
+
+state 113
+
+   52 exp: exp . telugu_arithmetic_operator exp
+   53    | exp . telugu_logical_operator exp
+   94 equation: telugu_identifier telugu_assignment_operator $@1 exp .
+
+    TELUGU_ARITHMETIC_OPERATOR  shift, and go to state 116
+    TELUGU_LOGICAL_OPERATOR     shift, and go to state 117
+
+    $default  reduce using rule 94 (equation)
+
+    telugu_arithmetic_operator  go to state 119
+    telugu_logical_operator     go to state 120
+
+
+state 114
+
+   50 exp: telugu_identifier telugu_open_square_bracket . exp telugu_closed_square_bracket
+   54    | telugu_identifier telugu_open_square_bracket . exp telugu_closed_square_bracket
+
+    TELUGU_INT                 shift, and go to state 77
+    TELUGU_FLOAT               shift, and go to state 78
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_STRING              shift, and go to state 79
+    TELUGU_OPEN_CURLY_BRACKET  shift, and go to state 59
+    TELUGU_CHARACTER           shift, and go to state 80
+
+    telugu_identifier          go to state 81
+    telugu_int                 go to state 82
+    telugu_float               go to state 83
+    telugu_string              go to state 84
+    telugu_open_curly_bracket  go to state 85
+    telugu_character           go to state 86
+    exp                        go to state 152
+    function_call              go to state 88
+
+
+state 115
+
+   51 exp: telugu_open_curly_bracket exp . telugu_closed_curly_bracket
+   52    | exp . telugu_arithmetic_operator exp
+   53    | exp . telugu_logical_operator exp
+
+    TELUGU_ARITHMETIC_OPERATOR   shift, and go to state 116
+    TELUGU_LOGICAL_OPERATOR      shift, and go to state 117
+    TELUGU_CLOSED_CURLY_BRACKET  shift, and go to state 131
+
+    telugu_arithmetic_operator   go to state 119
+    telugu_logical_operator      go to state 120
+    telugu_closed_curly_bracket  go to state 153
+
+
+state 116
+
+   16 telugu_arithmetic_operator: TELUGU_ARITHMETIC_OPERATOR .
+
+    $default  reduce using rule 16 (telugu_arithmetic_operator)
+
+
+state 117
+
+   19 telugu_logical_operator: TELUGU_LOGICAL_OPERATOR .
+
+    $default  reduce using rule 19 (telugu_logical_operator)
+
+
+state 118
+
+   29 telugu_closed_square_bracket: TELUGU_CLOSED_SQUARE_BRACKET .
+
+    $default  reduce using rule 29 (telugu_closed_square_bracket)
+
+
+state 119
+
+   52 exp: exp telugu_arithmetic_operator . exp
+
+    TELUGU_INT                 shift, and go to state 77
+    TELUGU_FLOAT               shift, and go to state 78
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_STRING              shift, and go to state 79
+    TELUGU_OPEN_CURLY_BRACKET  shift, and go to state 59
+    TELUGU_CHARACTER           shift, and go to state 80
+
+    telugu_identifier          go to state 81
+    telugu_int                 go to state 82
+    telugu_float               go to state 83
+    telugu_string              go to state 84
+    telugu_open_curly_bracket  go to state 85
+    telugu_character           go to state 86
+    exp                        go to state 154
+    function_call              go to state 88
+
+
+state 120
+
+   53 exp: exp telugu_logical_operator . exp
+
+    TELUGU_INT                 shift, and go to state 77
+    TELUGU_FLOAT               shift, and go to state 78
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_STRING              shift, and go to state 79
+    TELUGU_OPEN_CURLY_BRACKET  shift, and go to state 59
+    TELUGU_CHARACTER           shift, and go to state 80
+
+    telugu_identifier          go to state 81
+    telugu_int                 go to state 82
+    telugu_float               go to state 83
+    telugu_string              go to state 84
+    telugu_open_curly_bracket  go to state 85
+    telugu_character           go to state 86
+    exp                        go to state 155
+    function_call              go to state 88
+
+
+state 121
+
+   95 equation: telugu_identifier telugu_open_square_bracket exp telugu_closed_square_bracket . telugu_assignment_operator exp
+
+    TELUGU_ASSIGNMENT_OPERATOR  shift, and go to state 54
+
+    telugu_assignment_operator  go to state 156
+
+
+state 122
+
+   12 telugu_constant: TELUGU_INT .
+
+    $default  reduce using rule 12 (telugu_constant)
+
+
+state 123
+
+   13 telugu_constant: TELUGU_FLOAT .
+
+    $default  reduce using rule 13 (telugu_constant)
+
+
+state 124
+
+   14 telugu_constant: TELUGU_STRING .
+
+    $default  reduce using rule 14 (telugu_constant)
+
+
+state 125
+
+   15 telugu_constant: TELUGU_CHARACTER .
+
+    $default  reduce using rule 15 (telugu_constant)
+
+
+state 126
+
+   88 identifiers_repeat: telugu_identifier .
+   90                   | telugu_identifier . telugu_punctuation_comma identifiers_repeat
+
+    TELUGU_PUNCTUATION_COMMA  shift, and go to state 132
+
+    $default  reduce using rule 88 (identifiers_repeat)
+
+    telugu_punctuation_comma  go to state 157
+
+
+state 127
+
+   89 identifiers_repeat: telugu_constant .
+   91                   | telugu_constant . telugu_punctuation_comma identifiers_repeat
+
+    TELUGU_PUNCTUATION_COMMA  shift, and go to state 132
+
+    $default  reduce using rule 89 (identifiers_repeat)
+
+    telugu_punctuation_comma  go to state 158
+
+
+state 128
+
+   92 identifiers_line: identifiers_repeat .
+
+    $default  reduce using rule 92 (identifiers_line)
+
+
+state 129
+
+  111 function_call: telugu_identifier $@3 telugu_open_curly_bracket identifiers_line . telugu_closed_curly_bracket
+
+    TELUGU_CLOSED_CURLY_BRACKET  shift, and go to state 131
+
+    telugu_closed_curly_bracket  go to state 159
+
+
+state 130
+
+  101 print_content: print_content . eol
+  102              | eol print_content .
+  103              | print_content . telugu_string
+  104              | print_content . exp
+  105              | print_content . telugu_punctuation_comma telugu_string
+  106              | print_content . telugu_punctuation_comma exp
+
+    EOL                        shift, and go to state 1
+    TELUGU_INT                 shift, and go to state 77
+    TELUGU_FLOAT               shift, and go to state 78
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_STRING              shift, and go to state 79
+    TELUGU_OPEN_CURLY_BRACKET  shift, and go to state 59
+    TELUGU_PUNCTUATION_COMMA   shift, and go to state 132
+    TELUGU_CHARACTER           shift, and go to state 80
+
+    EOL                        [reduce using rule 102 (print_content)]
+    TELUGU_INT                 [reduce using rule 102 (print_content)]
+    TELUGU_FLOAT               [reduce using rule 102 (print_content)]
+    TELUGU_IDENTIFIER          [reduce using rule 102 (print_content)]
+    TELUGU_STRING              [reduce using rule 102 (print_content)]
+    TELUGU_OPEN_CURLY_BRACKET  [reduce using rule 102 (print_content)]
+    TELUGU_PUNCTUATION_COMMA   [reduce using rule 102 (print_content)]
+    TELUGU_CHARACTER           [reduce using rule 102 (print_content)]
+    $default                   reduce using rule 102 (print_content)
+
+    eol                        go to state 133
+    telugu_identifier          go to state 81
+    telugu_int                 go to state 82
+    telugu_float               go to state 83
+    telugu_string              go to state 134
+    telugu_open_curly_bracket  go to state 85
+    telugu_punctuation_comma   go to state 136
+    telugu_character           go to state 86
+    exp                        go to state 137
+    function_call              go to state 88
+
+
+state 131
+
+   27 telugu_closed_curly_bracket: TELUGU_CLOSED_CURLY_BRACKET .
+
+    $default  reduce using rule 27 (telugu_closed_curly_bracket)
+
+
+state 132
+
+   32 telugu_punctuation_comma: TELUGU_PUNCTUATION_COMMA .
+
+    $default  reduce using rule 32 (telugu_punctuation_comma)
+
+
+state 133
+
+  101 print_content: print_content eol .
+
+    $default  reduce using rule 101 (print_content)
+
+
+state 134
+
+   47 exp: telugu_string .
+  103 print_content: print_content telugu_string .
+
+    EOL                          reduce using rule 47 (exp)
+    EOL                          [reduce using rule 103 (print_content)]
+    TELUGU_INT                   reduce using rule 47 (exp)
+    TELUGU_INT                   [reduce using rule 103 (print_content)]
+    TELUGU_FLOAT                 reduce using rule 47 (exp)
+    TELUGU_FLOAT                 [reduce using rule 103 (print_content)]
+    TELUGU_IDENTIFIER            reduce using rule 47 (exp)
+    TELUGU_IDENTIFIER            [reduce using rule 103 (print_content)]
+    TELUGU_STRING                reduce using rule 47 (exp)
+    TELUGU_STRING                [reduce using rule 103 (print_content)]
+    TELUGU_OPEN_CURLY_BRACKET    reduce using rule 47 (exp)
+    TELUGU_OPEN_CURLY_BRACKET    [reduce using rule 103 (print_content)]
+    TELUGU_CLOSED_CURLY_BRACKET  reduce using rule 47 (exp)
+    TELUGU_CLOSED_CURLY_BRACKET  [reduce using rule 103 (print_content)]
+    TELUGU_PUNCTUATION_COMMA     reduce using rule 47 (exp)
+    TELUGU_PUNCTUATION_COMMA     [reduce using rule 103 (print_content)]
+    TELUGU_CHARACTER             reduce using rule 47 (exp)
+    TELUGU_CHARACTER             [reduce using rule 103 (print_content)]
+    $default                     reduce using rule 47 (exp)
+
+
+state 135
+
+  107 print_statement: telugu_print telugu_open_curly_bracket print_content telugu_closed_curly_bracket .
+
+    $default  reduce using rule 107 (print_statement)
+
+
+state 136
+
+  105 print_content: print_content telugu_punctuation_comma . telugu_string
+  106              | print_content telugu_punctuation_comma . exp
+
+    TELUGU_INT                 shift, and go to state 77
+    TELUGU_FLOAT               shift, and go to state 78
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_STRING              shift, and go to state 79
+    TELUGU_OPEN_CURLY_BRACKET  shift, and go to state 59
+    TELUGU_CHARACTER           shift, and go to state 80
+
+    telugu_identifier          go to state 81
+    telugu_int                 go to state 82
+    telugu_float               go to state 83
+    telugu_string              go to state 160
+    telugu_open_curly_bracket  go to state 85
+    telugu_character           go to state 86
+    exp                        go to state 161
+    function_call              go to state 88
+
+
+state 137
+
+   52 exp: exp . telugu_arithmetic_operator exp
+   53    | exp . telugu_logical_operator exp
+  104 print_content: print_content exp .
+
+    TELUGU_ARITHMETIC_OPERATOR  shift, and go to state 116
+    TELUGU_LOGICAL_OPERATOR     shift, and go to state 117
+
+    $default  reduce using rule 104 (print_content)
+
+    telugu_arithmetic_operator  go to state 119
+    telugu_logical_operator     go to state 120
+
+
+state 138
+
+   59 bunch_of_statements: bunch_of_statements telugu_input telugu_open_curly_bracket telugu_identifier telugu_closed_curly_bracket . telugu_finish bunch_of_statements
+
+    TELUGU_FINISH  shift, and go to state 18
+
+    telugu_finish  go to state 162
+
+
+state 139
+
+   52 exp: exp . telugu_arithmetic_operator exp
+   53    | exp . telugu_logical_operator exp
+   80 variable_declaration: telugu_datatype telugu_identifier_declaring telugu_assignment_operator exp .
+
+    TELUGU_ARITHMETIC_OPERATOR  shift, and go to state 116
+    TELUGU_LOGICAL_OPERATOR     shift, and go to state 117
+
+    $default  reduce using rule 80 (variable_declaration)
+
+    telugu_arithmetic_operator  go to state 119
+    telugu_logical_operator     go to state 120
+
+
+state 140
+
+   52 exp: exp . telugu_arithmetic_operator exp
+   53    | exp . telugu_logical_operator exp
+   82 variable_declaration: telugu_datatype telugu_identifier_declaring telugu_open_square_bracket exp . telugu_closed_square_bracket
+
+    TELUGU_ARITHMETIC_OPERATOR    shift, and go to state 116
+    TELUGU_LOGICAL_OPERATOR       shift, and go to state 117
+    TELUGU_CLOSED_SQUARE_BRACKET  shift, and go to state 118
+
+    telugu_arithmetic_operator    go to state 119
+    telugu_logical_operator       go to state 120
+    telugu_closed_square_bracket  go to state 163
+
+
+state 141
+
+   17 telugu_comparison_operator: TELUGU_COMPARISON_OPERATOR .
+
+    $default  reduce using rule 17 (telugu_comparison_operator)
+
+
+state 142
+
+   68 condition: exp telugu_comparison_operator . exp
+
+    TELUGU_INT                 shift, and go to state 77
+    TELUGU_FLOAT               shift, and go to state 78
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_STRING              shift, and go to state 79
+    TELUGU_OPEN_CURLY_BRACKET  shift, and go to state 59
+    TELUGU_CHARACTER           shift, and go to state 80
+
+    telugu_identifier          go to state 81
+    telugu_int                 go to state 82
+    telugu_float               go to state 83
+    telugu_string              go to state 84
+    telugu_open_curly_bracket  go to state 85
+    telugu_character           go to state 86
+    exp                        go to state 164
+    function_call              go to state 88
+
+
+state 143
+
+   53 exp: exp telugu_logical_operator . exp
+   69 condition: exp telugu_logical_operator . exp
+
+    TELUGU_INT                 shift, and go to state 77
+    TELUGU_FLOAT               shift, and go to state 78
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_STRING              shift, and go to state 79
+    TELUGU_OPEN_CURLY_BRACKET  shift, and go to state 59
+    TELUGU_CHARACTER           shift, and go to state 80
+
+    telugu_identifier          go to state 81
+    telugu_int                 go to state 82
+    telugu_float               go to state 83
+    telugu_string              go to state 84
+    telugu_open_curly_bracket  go to state 85
+    telugu_character           go to state 86
+    exp                        go to state 165
+    function_call              go to state 88
+
+
+state 144
+
+   70 if_statement: telugu_if telugu_open_curly_bracket condition telugu_closed_curly_bracket . telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket
+
+    TELUGU_OPEN_FLOOR_BRACKET  shift, and go to state 29
+
+    telugu_open_floor_bracket  go to state 166
+
+
+state 145
+
+   79 while_loop: telugu_while telugu_open_curly_bracket condition telugu_closed_curly_bracket . telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket
+
+    TELUGU_OPEN_FLOOR_BRACKET  shift, and go to state 29
+
+    telugu_open_floor_bracket  go to state 167
+
+
+state 146
+
+   57 bunch_of_statements: bunch_of_statements . eol
+   58                    | bunch_of_statements . if_else_ladder bunch_of_statements
+   59                    | bunch_of_statements . telugu_input telugu_open_curly_bracket telugu_identifier telugu_closed_curly_bracket telugu_finish bunch_of_statements
+   60                    | bunch_of_statements . while_loop bunch_of_statements
+   61                    | bunch_of_statements . print_statement telugu_finish bunch_of_statements
+   62                    | bunch_of_statements . variable_declaration telugu_finish bunch_of_statements
+   63                    | bunch_of_statements . telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket bunch_of_statements
+   63                    | bunch_of_statements telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket bunch_of_statements .
+   64                    | bunch_of_statements . function_call telugu_finish bunch_of_statements
+   65                    | bunch_of_statements . equation telugu_finish bunch_of_statements
+
+    EOL                        shift, and go to state 1
+    TELUGU_DATATYPE            shift, and go to state 26
+    TELUGU_IF                  shift, and go to state 27
+    TELUGU_WHILE               shift, and go to state 28
+    TELUGU_OPEN_FLOOR_BRACKET  shift, and go to state 29
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_PRINT               shift, and go to state 31
+    TELUGU_INPUT               shift, and go to state 32
+
+    EOL                        [reduce using rule 63 (bunch_of_statements)]
+    TELUGU_DATATYPE            [reduce using rule 63 (bunch_of_statements)]
+    TELUGU_IF                  [reduce using rule 63 (bunch_of_statements)]
+    TELUGU_WHILE               [reduce using rule 63 (bunch_of_statements)]
+    TELUGU_OPEN_FLOOR_BRACKET  [reduce using rule 63 (bunch_of_statements)]
+    TELUGU_IDENTIFIER          [reduce using rule 63 (bunch_of_statements)]
+    TELUGU_PRINT               [reduce using rule 63 (bunch_of_statements)]
+    TELUGU_INPUT               [reduce using rule 63 (bunch_of_statements)]
+    $default                   reduce using rule 63 (bunch_of_statements)
+
+    eol                        go to state 51
+    telugu_identifier          go to state 34
+    telugu_print               go to state 35
+    telugu_input               go to state 36
+    telugu_datatype            go to state 37
+    telugu_if                  go to state 38
+    telugu_while               go to state 39
+    telugu_open_floor_bracket  go to state 40
+    if_statement               go to state 42
+    if_else_ladder             go to state 43
+    while_loop                 go to state 44
+    variable_declaration       go to state 45
+    equation                   go to state 46
+    print_statement            go to state 47
+    function_call              go to state 48
+
+
+state 147
+
+   75 else_statement: eol else_statement .
+
+    $default  reduce using rule 75 (else_statement)
+
+
+state 148
+
+   73 elif_repeat: elif_repeat telugu_elif telugu_open_curly_bracket . condition telugu_closed_curly_bracket telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket elif_repeat
+
+    TELUGU_INT                 shift, and go to state 77
+    TELUGU_FLOAT               shift, and go to state 78
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_STRING              shift, and go to state 79
+    TELUGU_OPEN_CURLY_BRACKET  shift, and go to state 59
+    TELUGU_CHARACTER           shift, and go to state 80
+
+    telugu_identifier          go to state 81
+    telugu_int                 go to state 82
+    telugu_float               go to state 83
+    telugu_string              go to state 84
+    telugu_open_curly_bracket  go to state 85
+    telugu_character           go to state 86
+    exp                        go to state 95
+    condition                  go to state 168
+    function_call              go to state 88
+
+
+state 149
+
+   76 else_statement: telugu_else telugu_open_floor_bracket . bunch_of_statements telugu_closed_floor_bracket
+
+    error  shift, and go to state 11
+    EOL    shift, and go to state 1
+
+    EOL                          [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_DATATYPE              reduce using rule 55 (bunch_of_statements)
+    TELUGU_IF                    reduce using rule 55 (bunch_of_statements)
+    TELUGU_WHILE                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_OPEN_FLOOR_BRACKET    reduce using rule 55 (bunch_of_statements)
+    TELUGU_CLOSED_FLOOR_BRACKET  reduce using rule 55 (bunch_of_statements)
+    TELUGU_IDENTIFIER            reduce using rule 55 (bunch_of_statements)
+    TELUGU_PRINT                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_INPUT                 reduce using rule 55 (bunch_of_statements)
+
+    eol                  go to state 21
+    bunch_of_statements  go to state 169
+
+
+state 150
+
+   84 parameters_repeat: parameters_repeat telugu_datatype . telugu_identifier_declaring telugu_punctuation_comma
+   86 parameters_line: parameters_repeat telugu_datatype . telugu_identifier_declaring
+
+    TELUGU_IDENTIFIER  shift, and go to state 62
+
+    telugu_identifier_declaring  go to state 170
+
+
+state 151
+
+  109 function_declaration: telugu_function telugu_function_name $@2 telugu_open_curly_bracket parameters_line telugu_closed_curly_bracket . telugu_open_floor_bracket function_content telugu_closed_floor_bracket
+
+    TELUGU_OPEN_FLOOR_BRACKET  shift, and go to state 29
+
+    telugu_open_floor_bracket  go to state 171
+
+
+state 152
+
+   50 exp: telugu_identifier telugu_open_square_bracket exp . telugu_closed_square_bracket
+   52    | exp . telugu_arithmetic_operator exp
+   53    | exp . telugu_logical_operator exp
+   54    | telugu_identifier telugu_open_square_bracket exp . telugu_closed_square_bracket
+
+    TELUGU_ARITHMETIC_OPERATOR    shift, and go to state 116
+    TELUGU_LOGICAL_OPERATOR       shift, and go to state 117
+    TELUGU_CLOSED_SQUARE_BRACKET  shift, and go to state 118
+
+    telugu_arithmetic_operator    go to state 119
+    telugu_logical_operator       go to state 120
+    telugu_closed_square_bracket  go to state 172
+
+
+state 153
+
+   51 exp: telugu_open_curly_bracket exp telugu_closed_curly_bracket .
+
+    $default  reduce using rule 51 (exp)
+
+
+state 154
+
+   52 exp: exp . telugu_arithmetic_operator exp
+   52    | exp telugu_arithmetic_operator exp .
+   53    | exp . telugu_logical_operator exp
+
+    TELUGU_ARITHMETIC_OPERATOR  shift, and go to state 116
+    TELUGU_LOGICAL_OPERATOR     shift, and go to state 117
+
+    TELUGU_ARITHMETIC_OPERATOR  [reduce using rule 52 (exp)]
+    TELUGU_LOGICAL_OPERATOR     [reduce using rule 52 (exp)]
+    $default                    reduce using rule 52 (exp)
+
+    telugu_arithmetic_operator  go to state 119
+    telugu_logical_operator     go to state 120
+
+
+state 155
+
+   52 exp: exp . telugu_arithmetic_operator exp
+   53    | exp . telugu_logical_operator exp
+   53    | exp telugu_logical_operator exp .
+
+    TELUGU_ARITHMETIC_OPERATOR  shift, and go to state 116
+    TELUGU_LOGICAL_OPERATOR     shift, and go to state 117
+
+    TELUGU_ARITHMETIC_OPERATOR  [reduce using rule 53 (exp)]
+    TELUGU_LOGICAL_OPERATOR     [reduce using rule 53 (exp)]
+    $default                    reduce using rule 53 (exp)
+
+    telugu_arithmetic_operator  go to state 119
+    telugu_logical_operator     go to state 120
+
+
+state 156
+
+   95 equation: telugu_identifier telugu_open_square_bracket exp telugu_closed_square_bracket telugu_assignment_operator . exp
+
+    TELUGU_INT                 shift, and go to state 77
+    TELUGU_FLOAT               shift, and go to state 78
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_STRING              shift, and go to state 79
+    TELUGU_OPEN_CURLY_BRACKET  shift, and go to state 59
+    TELUGU_CHARACTER           shift, and go to state 80
+
+    telugu_identifier          go to state 81
+    telugu_int                 go to state 82
+    telugu_float               go to state 83
+    telugu_string              go to state 84
+    telugu_open_curly_bracket  go to state 85
+    telugu_character           go to state 86
+    exp                        go to state 173
+    function_call              go to state 88
+
+
+state 157
+
+   90 identifiers_repeat: telugu_identifier telugu_punctuation_comma . identifiers_repeat
+
+    TELUGU_INT         shift, and go to state 122
+    TELUGU_FLOAT       shift, and go to state 123
+    TELUGU_IDENTIFIER  shift, and go to state 30
+    TELUGU_STRING      shift, and go to state 124
+    TELUGU_CHARACTER   shift, and go to state 125
+
+    $default  reduce using rule 87 (identifiers_repeat)
+
+    telugu_identifier   go to state 126
+    telugu_constant     go to state 127
+    identifiers_repeat  go to state 174
+
+
+state 158
+
+   91 identifiers_repeat: telugu_constant telugu_punctuation_comma . identifiers_repeat
+
+    TELUGU_INT         shift, and go to state 122
+    TELUGU_FLOAT       shift, and go to state 123
+    TELUGU_IDENTIFIER  shift, and go to state 30
+    TELUGU_STRING      shift, and go to state 124
+    TELUGU_CHARACTER   shift, and go to state 125
+
+    $default  reduce using rule 87 (identifiers_repeat)
+
+    telugu_identifier   go to state 126
+    telugu_constant     go to state 127
+    identifiers_repeat  go to state 175
+
+
+state 159
+
+  111 function_call: telugu_identifier $@3 telugu_open_curly_bracket identifiers_line telugu_closed_curly_bracket .
+
+    $default  reduce using rule 111 (function_call)
+
+
+state 160
+
+   47 exp: telugu_string .
+  105 print_content: print_content telugu_punctuation_comma telugu_string .
+
+    EOL                          reduce using rule 47 (exp)
+    EOL                          [reduce using rule 105 (print_content)]
+    TELUGU_INT                   reduce using rule 47 (exp)
+    TELUGU_INT                   [reduce using rule 105 (print_content)]
+    TELUGU_FLOAT                 reduce using rule 47 (exp)
+    TELUGU_FLOAT                 [reduce using rule 105 (print_content)]
+    TELUGU_IDENTIFIER            reduce using rule 47 (exp)
+    TELUGU_IDENTIFIER            [reduce using rule 105 (print_content)]
+    TELUGU_STRING                reduce using rule 47 (exp)
+    TELUGU_STRING                [reduce using rule 105 (print_content)]
+    TELUGU_OPEN_CURLY_BRACKET    reduce using rule 47 (exp)
+    TELUGU_OPEN_CURLY_BRACKET    [reduce using rule 105 (print_content)]
+    TELUGU_CLOSED_CURLY_BRACKET  reduce using rule 47 (exp)
+    TELUGU_CLOSED_CURLY_BRACKET  [reduce using rule 105 (print_content)]
+    TELUGU_PUNCTUATION_COMMA     reduce using rule 47 (exp)
+    TELUGU_PUNCTUATION_COMMA     [reduce using rule 105 (print_content)]
+    TELUGU_CHARACTER             reduce using rule 47 (exp)
+    TELUGU_CHARACTER             [reduce using rule 105 (print_content)]
+    $default                     reduce using rule 47 (exp)
+
+
+state 161
+
+   52 exp: exp . telugu_arithmetic_operator exp
+   53    | exp . telugu_logical_operator exp
+  106 print_content: print_content telugu_punctuation_comma exp .
+
+    TELUGU_ARITHMETIC_OPERATOR  shift, and go to state 116
+    TELUGU_LOGICAL_OPERATOR     shift, and go to state 117
+
+    $default  reduce using rule 106 (print_content)
+
+    telugu_arithmetic_operator  go to state 119
+    telugu_logical_operator     go to state 120
+
+
+state 162
+
+   59 bunch_of_statements: bunch_of_statements telugu_input telugu_open_curly_bracket telugu_identifier telugu_closed_curly_bracket telugu_finish . bunch_of_statements
+
+    error  shift, and go to state 11
+    EOL    shift, and go to state 1
+
+    $end                         reduce using rule 55 (bunch_of_statements)
+    error                        [reduce using rule 55 (bunch_of_statements)]
+    EOL                          [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_DATATYPE              reduce using rule 55 (bunch_of_statements)
+    TELUGU_IF                    reduce using rule 55 (bunch_of_statements)
+    TELUGU_WHILE                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_OPEN_FLOOR_BRACKET    reduce using rule 55 (bunch_of_statements)
+    TELUGU_CLOSED_FLOOR_BRACKET  reduce using rule 55 (bunch_of_statements)
+    TELUGU_IDENTIFIER            reduce using rule 55 (bunch_of_statements)
+    TELUGU_FUNCTION              reduce using rule 55 (bunch_of_statements)
+    TELUGU_RETURN                reduce using rule 55 (bunch_of_statements)
+    TELUGU_PRINT                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_IMPORT                reduce using rule 55 (bunch_of_statements)
+    TELUGU_INPUT                 reduce using rule 55 (bunch_of_statements)
+
+    eol                  go to state 21
+    bunch_of_statements  go to state 176
+
+
+state 163
+
+   82 variable_declaration: telugu_datatype telugu_identifier_declaring telugu_open_square_bracket exp telugu_closed_square_bracket .
+
+    $default  reduce using rule 82 (variable_declaration)
+
+
+state 164
+
+   52 exp: exp . telugu_arithmetic_operator exp
+   53    | exp . telugu_logical_operator exp
+   68 condition: exp telugu_comparison_operator exp .
+
+    TELUGU_ARITHMETIC_OPERATOR  shift, and go to state 116
+    TELUGU_LOGICAL_OPERATOR     shift, and go to state 117
+
+    $default  reduce using rule 68 (condition)
+
+    telugu_arithmetic_operator  go to state 119
+    telugu_logical_operator     go to state 120
+
+
+state 165
+
+   52 exp: exp . telugu_arithmetic_operator exp
+   53    | exp . telugu_logical_operator exp
+   53    | exp telugu_logical_operator exp .
+   69 condition: exp telugu_logical_operator exp .
+
+    TELUGU_ARITHMETIC_OPERATOR  shift, and go to state 116
+    TELUGU_LOGICAL_OPERATOR     shift, and go to state 117
+
+    TELUGU_ARITHMETIC_OPERATOR   [reduce using rule 53 (exp)]
+    TELUGU_LOGICAL_OPERATOR      [reduce using rule 53 (exp)]
+    TELUGU_CLOSED_CURLY_BRACKET  reduce using rule 53 (exp)
+    TELUGU_CLOSED_CURLY_BRACKET  [reduce using rule 69 (condition)]
+    $default                     reduce using rule 53 (exp)
+
+    telugu_arithmetic_operator  go to state 119
+    telugu_logical_operator     go to state 120
+
+
+state 166
+
+   70 if_statement: telugu_if telugu_open_curly_bracket condition telugu_closed_curly_bracket telugu_open_floor_bracket . bunch_of_statements telugu_closed_floor_bracket
+
+    error  shift, and go to state 11
+    EOL    shift, and go to state 1
+
+    EOL                          [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_DATATYPE              reduce using rule 55 (bunch_of_statements)
+    TELUGU_IF                    reduce using rule 55 (bunch_of_statements)
+    TELUGU_WHILE                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_OPEN_FLOOR_BRACKET    reduce using rule 55 (bunch_of_statements)
+    TELUGU_CLOSED_FLOOR_BRACKET  reduce using rule 55 (bunch_of_statements)
+    TELUGU_IDENTIFIER            reduce using rule 55 (bunch_of_statements)
+    TELUGU_PRINT                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_INPUT                 reduce using rule 55 (bunch_of_statements)
+
+    eol                  go to state 21
+    bunch_of_statements  go to state 177
+
+
+state 167
+
+   79 while_loop: telugu_while telugu_open_curly_bracket condition telugu_closed_curly_bracket telugu_open_floor_bracket . bunch_of_statements telugu_closed_floor_bracket
+
+    error  shift, and go to state 11
+    EOL    shift, and go to state 1
+
+    EOL                          [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_DATATYPE              reduce using rule 55 (bunch_of_statements)
+    TELUGU_IF                    reduce using rule 55 (bunch_of_statements)
+    TELUGU_WHILE                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_OPEN_FLOOR_BRACKET    reduce using rule 55 (bunch_of_statements)
+    TELUGU_CLOSED_FLOOR_BRACKET  reduce using rule 55 (bunch_of_statements)
+    TELUGU_IDENTIFIER            reduce using rule 55 (bunch_of_statements)
+    TELUGU_PRINT                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_INPUT                 reduce using rule 55 (bunch_of_statements)
+
+    eol                  go to state 21
+    bunch_of_statements  go to state 178
+
+
+state 168
+
+   73 elif_repeat: elif_repeat telugu_elif telugu_open_curly_bracket condition . telugu_closed_curly_bracket telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket elif_repeat
+
+    TELUGU_CLOSED_CURLY_BRACKET  shift, and go to state 131
+
+    telugu_closed_curly_bracket  go to state 179
+
+
+state 169
+
+   57 bunch_of_statements: bunch_of_statements . eol
+   58                    | bunch_of_statements . if_else_ladder bunch_of_statements
+   59                    | bunch_of_statements . telugu_input telugu_open_curly_bracket telugu_identifier telugu_closed_curly_bracket telugu_finish bunch_of_statements
+   60                    | bunch_of_statements . while_loop bunch_of_statements
+   61                    | bunch_of_statements . print_statement telugu_finish bunch_of_statements
+   62                    | bunch_of_statements . variable_declaration telugu_finish bunch_of_statements
+   63                    | bunch_of_statements . telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket bunch_of_statements
+   64                    | bunch_of_statements . function_call telugu_finish bunch_of_statements
+   65                    | bunch_of_statements . equation telugu_finish bunch_of_statements
+   76 else_statement: telugu_else telugu_open_floor_bracket bunch_of_statements . telugu_closed_floor_bracket
+
+    EOL                          shift, and go to state 1
+    TELUGU_DATATYPE              shift, and go to state 26
+    TELUGU_IF                    shift, and go to state 27
+    TELUGU_WHILE                 shift, and go to state 28
+    TELUGU_OPEN_FLOOR_BRACKET    shift, and go to state 29
+    TELUGU_CLOSED_FLOOR_BRACKET  shift, and go to state 98
+    TELUGU_IDENTIFIER            shift, and go to state 30
+    TELUGU_PRINT                 shift, and go to state 31
+    TELUGU_INPUT                 shift, and go to state 32
+
+    eol                          go to state 51
+    telugu_identifier            go to state 34
+    telugu_print                 go to state 35
+    telugu_input                 go to state 36
+    telugu_datatype              go to state 37
+    telugu_if                    go to state 38
+    telugu_while                 go to state 39
+    telugu_open_floor_bracket    go to state 40
+    telugu_closed_floor_bracket  go to state 180
+    if_statement                 go to state 42
+    if_else_ladder               go to state 43
+    while_loop                   go to state 44
+    variable_declaration         go to state 45
+    equation                     go to state 46
+    print_statement              go to state 47
+    function_call                go to state 48
+
+
+state 170
+
+   84 parameters_repeat: parameters_repeat telugu_datatype telugu_identifier_declaring . telugu_punctuation_comma
+   86 parameters_line: parameters_repeat telugu_datatype telugu_identifier_declaring .
+
+    TELUGU_PUNCTUATION_COMMA  shift, and go to state 132
+
+    $default  reduce using rule 86 (parameters_line)
+
+    telugu_punctuation_comma  go to state 181
+
+
+state 171
+
+  109 function_declaration: telugu_function telugu_function_name $@2 telugu_open_curly_bracket parameters_line telugu_closed_curly_bracket telugu_open_floor_bracket . function_content telugu_closed_floor_bracket
+
+    error  shift, and go to state 11
+    EOL    shift, and go to state 1
+
+    EOL                          [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_DATATYPE              reduce using rule 55 (bunch_of_statements)
+    TELUGU_IF                    reduce using rule 55 (bunch_of_statements)
+    TELUGU_WHILE                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_OPEN_FLOOR_BRACKET    reduce using rule 55 (bunch_of_statements)
+    TELUGU_CLOSED_FLOOR_BRACKET  reduce using rule 55 (bunch_of_statements)
+    TELUGU_IDENTIFIER            reduce using rule 55 (bunch_of_statements)
+    TELUGU_RETURN                reduce using rule 55 (bunch_of_statements)
+    TELUGU_PRINT                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_INPUT                 reduce using rule 55 (bunch_of_statements)
+
+    eol                  go to state 21
+    bunch_of_statements  go to state 182
+    function_content     go to state 183
+
+
+state 172
+
+   50 exp: telugu_identifier telugu_open_square_bracket exp telugu_closed_square_bracket .
+   54    | telugu_identifier telugu_open_square_bracket exp telugu_closed_square_bracket .
+
+    EOL                           reduce using rule 50 (exp)
+    EOL                           [reduce using rule 54 (exp)]
+    TELUGU_INT                    reduce using rule 50 (exp)
+    TELUGU_INT                    [reduce using rule 54 (exp)]
+    TELUGU_FLOAT                  reduce using rule 50 (exp)
+    TELUGU_FLOAT                  [reduce using rule 54 (exp)]
+    TELUGU_ARITHMETIC_OPERATOR    reduce using rule 50 (exp)
+    TELUGU_ARITHMETIC_OPERATOR    [reduce using rule 54 (exp)]
+    TELUGU_COMPARISON_OPERATOR    reduce using rule 50 (exp)
+    TELUGU_COMPARISON_OPERATOR    [reduce using rule 54 (exp)]
+    TELUGU_LOGICAL_OPERATOR       reduce using rule 50 (exp)
+    TELUGU_LOGICAL_OPERATOR       [reduce using rule 54 (exp)]
+    TELUGU_IDENTIFIER             reduce using rule 50 (exp)
+    TELUGU_IDENTIFIER             [reduce using rule 54 (exp)]
+    TELUGU_STRING                 reduce using rule 50 (exp)
+    TELUGU_STRING                 [reduce using rule 54 (exp)]
+    TELUGU_OPEN_CURLY_BRACKET     reduce using rule 50 (exp)
+    TELUGU_OPEN_CURLY_BRACKET     [reduce using rule 54 (exp)]
+    TELUGU_CLOSED_CURLY_BRACKET   reduce using rule 50 (exp)
+    TELUGU_CLOSED_CURLY_BRACKET   [reduce using rule 54 (exp)]
+    TELUGU_CLOSED_SQUARE_BRACKET  reduce using rule 50 (exp)
+    TELUGU_CLOSED_SQUARE_BRACKET  [reduce using rule 54 (exp)]
+    TELUGU_PUNCTUATION_COMMA      reduce using rule 50 (exp)
+    TELUGU_PUNCTUATION_COMMA      [reduce using rule 54 (exp)]
+    TELUGU_FINISH                 reduce using rule 50 (exp)
+    TELUGU_FINISH                 [reduce using rule 54 (exp)]
+    TELUGU_CHARACTER              reduce using rule 50 (exp)
+    TELUGU_CHARACTER              [reduce using rule 54 (exp)]
+    $default                      reduce using rule 50 (exp)
+
+
+state 173
+
+   52 exp: exp . telugu_arithmetic_operator exp
+   53    | exp . telugu_logical_operator exp
+   95 equation: telugu_identifier telugu_open_square_bracket exp telugu_closed_square_bracket telugu_assignment_operator exp .
+
+    TELUGU_ARITHMETIC_OPERATOR  shift, and go to state 116
+    TELUGU_LOGICAL_OPERATOR     shift, and go to state 117
+
+    $default  reduce using rule 95 (equation)
+
+    telugu_arithmetic_operator  go to state 119
+    telugu_logical_operator     go to state 120
+
+
+state 174
+
+   90 identifiers_repeat: telugu_identifier telugu_punctuation_comma identifiers_repeat .
+
+    $default  reduce using rule 90 (identifiers_repeat)
+
+
+state 175
+
+   91 identifiers_repeat: telugu_constant telugu_punctuation_comma identifiers_repeat .
+
+    $default  reduce using rule 91 (identifiers_repeat)
+
+
+state 176
+
+   57 bunch_of_statements: bunch_of_statements . eol
+   58                    | bunch_of_statements . if_else_ladder bunch_of_statements
+   59                    | bunch_of_statements . telugu_input telugu_open_curly_bracket telugu_identifier telugu_closed_curly_bracket telugu_finish bunch_of_statements
+   59                    | bunch_of_statements telugu_input telugu_open_curly_bracket telugu_identifier telugu_closed_curly_bracket telugu_finish bunch_of_statements .
+   60                    | bunch_of_statements . while_loop bunch_of_statements
+   61                    | bunch_of_statements . print_statement telugu_finish bunch_of_statements
+   62                    | bunch_of_statements . variable_declaration telugu_finish bunch_of_statements
+   63                    | bunch_of_statements . telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket bunch_of_statements
+   64                    | bunch_of_statements . function_call telugu_finish bunch_of_statements
+   65                    | bunch_of_statements . equation telugu_finish bunch_of_statements
+
+    EOL                        shift, and go to state 1
+    TELUGU_DATATYPE            shift, and go to state 26
+    TELUGU_IF                  shift, and go to state 27
+    TELUGU_WHILE               shift, and go to state 28
+    TELUGU_OPEN_FLOOR_BRACKET  shift, and go to state 29
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_PRINT               shift, and go to state 31
+    TELUGU_INPUT               shift, and go to state 32
+
+    EOL                        [reduce using rule 59 (bunch_of_statements)]
+    TELUGU_DATATYPE            [reduce using rule 59 (bunch_of_statements)]
+    TELUGU_IF                  [reduce using rule 59 (bunch_of_statements)]
+    TELUGU_WHILE               [reduce using rule 59 (bunch_of_statements)]
+    TELUGU_OPEN_FLOOR_BRACKET  [reduce using rule 59 (bunch_of_statements)]
+    TELUGU_IDENTIFIER          [reduce using rule 59 (bunch_of_statements)]
+    TELUGU_PRINT               [reduce using rule 59 (bunch_of_statements)]
+    TELUGU_INPUT               [reduce using rule 59 (bunch_of_statements)]
+    $default                   reduce using rule 59 (bunch_of_statements)
+
+    eol                        go to state 51
+    telugu_identifier          go to state 34
+    telugu_print               go to state 35
+    telugu_input               go to state 36
+    telugu_datatype            go to state 37
+    telugu_if                  go to state 38
+    telugu_while               go to state 39
+    telugu_open_floor_bracket  go to state 40
+    if_statement               go to state 42
+    if_else_ladder             go to state 43
+    while_loop                 go to state 44
+    variable_declaration       go to state 45
+    equation                   go to state 46
+    print_statement            go to state 47
+    function_call              go to state 48
+
+
+state 177
+
+   57 bunch_of_statements: bunch_of_statements . eol
+   58                    | bunch_of_statements . if_else_ladder bunch_of_statements
+   59                    | bunch_of_statements . telugu_input telugu_open_curly_bracket telugu_identifier telugu_closed_curly_bracket telugu_finish bunch_of_statements
+   60                    | bunch_of_statements . while_loop bunch_of_statements
+   61                    | bunch_of_statements . print_statement telugu_finish bunch_of_statements
+   62                    | bunch_of_statements . variable_declaration telugu_finish bunch_of_statements
+   63                    | bunch_of_statements . telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket bunch_of_statements
+   64                    | bunch_of_statements . function_call telugu_finish bunch_of_statements
+   65                    | bunch_of_statements . equation telugu_finish bunch_of_statements
+   70 if_statement: telugu_if telugu_open_curly_bracket condition telugu_closed_curly_bracket telugu_open_floor_bracket bunch_of_statements . telugu_closed_floor_bracket
+
+    EOL                          shift, and go to state 1
+    TELUGU_DATATYPE              shift, and go to state 26
+    TELUGU_IF                    shift, and go to state 27
+    TELUGU_WHILE                 shift, and go to state 28
+    TELUGU_OPEN_FLOOR_BRACKET    shift, and go to state 29
+    TELUGU_CLOSED_FLOOR_BRACKET  shift, and go to state 98
+    TELUGU_IDENTIFIER            shift, and go to state 30
+    TELUGU_PRINT                 shift, and go to state 31
+    TELUGU_INPUT                 shift, and go to state 32
+
+    eol                          go to state 51
+    telugu_identifier            go to state 34
+    telugu_print                 go to state 35
+    telugu_input                 go to state 36
+    telugu_datatype              go to state 37
+    telugu_if                    go to state 38
+    telugu_while                 go to state 39
+    telugu_open_floor_bracket    go to state 40
+    telugu_closed_floor_bracket  go to state 184
+    if_statement                 go to state 42
+    if_else_ladder               go to state 43
+    while_loop                   go to state 44
+    variable_declaration         go to state 45
+    equation                     go to state 46
+    print_statement              go to state 47
+    function_call                go to state 48
+
+
+state 178
+
+   57 bunch_of_statements: bunch_of_statements . eol
+   58                    | bunch_of_statements . if_else_ladder bunch_of_statements
+   59                    | bunch_of_statements . telugu_input telugu_open_curly_bracket telugu_identifier telugu_closed_curly_bracket telugu_finish bunch_of_statements
+   60                    | bunch_of_statements . while_loop bunch_of_statements
+   61                    | bunch_of_statements . print_statement telugu_finish bunch_of_statements
+   62                    | bunch_of_statements . variable_declaration telugu_finish bunch_of_statements
+   63                    | bunch_of_statements . telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket bunch_of_statements
+   64                    | bunch_of_statements . function_call telugu_finish bunch_of_statements
+   65                    | bunch_of_statements . equation telugu_finish bunch_of_statements
+   79 while_loop: telugu_while telugu_open_curly_bracket condition telugu_closed_curly_bracket telugu_open_floor_bracket bunch_of_statements . telugu_closed_floor_bracket
+
+    EOL                          shift, and go to state 1
+    TELUGU_DATATYPE              shift, and go to state 26
+    TELUGU_IF                    shift, and go to state 27
+    TELUGU_WHILE                 shift, and go to state 28
+    TELUGU_OPEN_FLOOR_BRACKET    shift, and go to state 29
+    TELUGU_CLOSED_FLOOR_BRACKET  shift, and go to state 98
+    TELUGU_IDENTIFIER            shift, and go to state 30
+    TELUGU_PRINT                 shift, and go to state 31
+    TELUGU_INPUT                 shift, and go to state 32
+
+    eol                          go to state 51
+    telugu_identifier            go to state 34
+    telugu_print                 go to state 35
+    telugu_input                 go to state 36
+    telugu_datatype              go to state 37
+    telugu_if                    go to state 38
+    telugu_while                 go to state 39
+    telugu_open_floor_bracket    go to state 40
+    telugu_closed_floor_bracket  go to state 185
+    if_statement                 go to state 42
+    if_else_ladder               go to state 43
+    while_loop                   go to state 44
+    variable_declaration         go to state 45
+    equation                     go to state 46
+    print_statement              go to state 47
+    function_call                go to state 48
+
+
+state 179
+
+   73 elif_repeat: elif_repeat telugu_elif telugu_open_curly_bracket condition telugu_closed_curly_bracket . telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket elif_repeat
+
+    TELUGU_OPEN_FLOOR_BRACKET  shift, and go to state 29
+
+    telugu_open_floor_bracket  go to state 186
+
+
+state 180
+
+   76 else_statement: telugu_else telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket .
+
+    $default  reduce using rule 76 (else_statement)
+
+
+state 181
+
+   84 parameters_repeat: parameters_repeat telugu_datatype telugu_identifier_declaring telugu_punctuation_comma .
+
+    $default  reduce using rule 84 (parameters_repeat)
+
+
+state 182
+
+   57 bunch_of_statements: bunch_of_statements . eol
+   58                    | bunch_of_statements . if_else_ladder bunch_of_statements
+   59                    | bunch_of_statements . telugu_input telugu_open_curly_bracket telugu_identifier telugu_closed_curly_bracket telugu_finish bunch_of_statements
+   60                    | bunch_of_statements . while_loop bunch_of_statements
+   61                    | bunch_of_statements . print_statement telugu_finish bunch_of_statements
+   62                    | bunch_of_statements . variable_declaration telugu_finish bunch_of_statements
+   63                    | bunch_of_statements . telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket bunch_of_statements
+   64                    | bunch_of_statements . function_call telugu_finish bunch_of_statements
+   65                    | bunch_of_statements . equation telugu_finish bunch_of_statements
+   97 function_content: bunch_of_statements .
+   98                 | bunch_of_statements . telugu_return telugu_finish bunch_of_statements
+   99                 | bunch_of_statements . telugu_return exp telugu_finish bunch_of_statements
+
+    EOL                        shift, and go to state 1
+    TELUGU_DATATYPE            shift, and go to state 26
+    TELUGU_IF                  shift, and go to state 27
+    TELUGU_WHILE               shift, and go to state 28
+    TELUGU_OPEN_FLOOR_BRACKET  shift, and go to state 29
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_RETURN              shift, and go to state 187
+    TELUGU_PRINT               shift, and go to state 31
+    TELUGU_INPUT               shift, and go to state 32
+
+    EOL       [reduce using rule 97 (function_content)]
+    $default  reduce using rule 97 (function_content)
+
+    eol                        go to state 51
+    telugu_identifier          go to state 34
+    telugu_print               go to state 35
+    telugu_input               go to state 36
+    telugu_datatype            go to state 37
+    telugu_if                  go to state 38
+    telugu_while               go to state 39
+    telugu_open_floor_bracket  go to state 40
+    telugu_return              go to state 188
+    if_statement               go to state 42
+    if_else_ladder             go to state 43
+    while_loop                 go to state 44
+    variable_declaration       go to state 45
+    equation                   go to state 46
+    print_statement            go to state 47
+    function_call              go to state 48
+
+
+state 183
+
+   96 function_content: function_content . eol
+  109 function_declaration: telugu_function telugu_function_name $@2 telugu_open_curly_bracket parameters_line telugu_closed_curly_bracket telugu_open_floor_bracket function_content . telugu_closed_floor_bracket
+
+    EOL                          shift, and go to state 1
+    TELUGU_CLOSED_FLOOR_BRACKET  shift, and go to state 98
+
+    eol                          go to state 189
+    telugu_closed_floor_bracket  go to state 190
+
+
+state 184
+
+   70 if_statement: telugu_if telugu_open_curly_bracket condition telugu_closed_curly_bracket telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket .
+
+    $default  reduce using rule 70 (if_statement)
+
+
+state 185
+
+   79 while_loop: telugu_while telugu_open_curly_bracket condition telugu_closed_curly_bracket telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket .
+
+    $default  reduce using rule 79 (while_loop)
+
+
+state 186
+
+   73 elif_repeat: elif_repeat telugu_elif telugu_open_curly_bracket condition telugu_closed_curly_bracket telugu_open_floor_bracket . bunch_of_statements telugu_closed_floor_bracket elif_repeat
+
+    error  shift, and go to state 11
+    EOL    shift, and go to state 1
+
+    EOL                          [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_DATATYPE              reduce using rule 55 (bunch_of_statements)
+    TELUGU_IF                    reduce using rule 55 (bunch_of_statements)
+    TELUGU_WHILE                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_OPEN_FLOOR_BRACKET    reduce using rule 55 (bunch_of_statements)
+    TELUGU_CLOSED_FLOOR_BRACKET  reduce using rule 55 (bunch_of_statements)
+    TELUGU_IDENTIFIER            reduce using rule 55 (bunch_of_statements)
+    TELUGU_PRINT                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_INPUT                 reduce using rule 55 (bunch_of_statements)
+
+    eol                  go to state 21
+    bunch_of_statements  go to state 191
+
+
+state 187
+
+   35 telugu_return: TELUGU_RETURN .
+
+    $default  reduce using rule 35 (telugu_return)
+
+
+state 188
+
+   98 function_content: bunch_of_statements telugu_return . telugu_finish bunch_of_statements
+   99                 | bunch_of_statements telugu_return . exp telugu_finish bunch_of_statements
+
+    TELUGU_INT                 shift, and go to state 77
+    TELUGU_FLOAT               shift, and go to state 78
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_STRING              shift, and go to state 79
+    TELUGU_OPEN_CURLY_BRACKET  shift, and go to state 59
+    TELUGU_FINISH              shift, and go to state 18
+    TELUGU_CHARACTER           shift, and go to state 80
+
+    telugu_identifier          go to state 81
+    telugu_int                 go to state 82
+    telugu_float               go to state 83
+    telugu_string              go to state 84
+    telugu_open_curly_bracket  go to state 85
+    telugu_finish              go to state 192
+    telugu_character           go to state 86
+    exp                        go to state 193
+    function_call              go to state 88
+
+
+state 189
+
+   96 function_content: function_content eol .
+
+    $default  reduce using rule 96 (function_content)
+
+
+state 190
+
+  109 function_declaration: telugu_function telugu_function_name $@2 telugu_open_curly_bracket parameters_line telugu_closed_curly_bracket telugu_open_floor_bracket function_content telugu_closed_floor_bracket .
+
+    $default  reduce using rule 109 (function_declaration)
+
+
+state 191
+
+   57 bunch_of_statements: bunch_of_statements . eol
+   58                    | bunch_of_statements . if_else_ladder bunch_of_statements
+   59                    | bunch_of_statements . telugu_input telugu_open_curly_bracket telugu_identifier telugu_closed_curly_bracket telugu_finish bunch_of_statements
+   60                    | bunch_of_statements . while_loop bunch_of_statements
+   61                    | bunch_of_statements . print_statement telugu_finish bunch_of_statements
+   62                    | bunch_of_statements . variable_declaration telugu_finish bunch_of_statements
+   63                    | bunch_of_statements . telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket bunch_of_statements
+   64                    | bunch_of_statements . function_call telugu_finish bunch_of_statements
+   65                    | bunch_of_statements . equation telugu_finish bunch_of_statements
+   73 elif_repeat: elif_repeat telugu_elif telugu_open_curly_bracket condition telugu_closed_curly_bracket telugu_open_floor_bracket bunch_of_statements . telugu_closed_floor_bracket elif_repeat
+
+    EOL                          shift, and go to state 1
+    TELUGU_DATATYPE              shift, and go to state 26
+    TELUGU_IF                    shift, and go to state 27
+    TELUGU_WHILE                 shift, and go to state 28
+    TELUGU_OPEN_FLOOR_BRACKET    shift, and go to state 29
+    TELUGU_CLOSED_FLOOR_BRACKET  shift, and go to state 98
+    TELUGU_IDENTIFIER            shift, and go to state 30
+    TELUGU_PRINT                 shift, and go to state 31
+    TELUGU_INPUT                 shift, and go to state 32
+
+    eol                          go to state 51
+    telugu_identifier            go to state 34
+    telugu_print                 go to state 35
+    telugu_input                 go to state 36
+    telugu_datatype              go to state 37
+    telugu_if                    go to state 38
+    telugu_while                 go to state 39
+    telugu_open_floor_bracket    go to state 40
+    telugu_closed_floor_bracket  go to state 194
+    if_statement                 go to state 42
+    if_else_ladder               go to state 43
+    while_loop                   go to state 44
+    variable_declaration         go to state 45
+    equation                     go to state 46
+    print_statement              go to state 47
+    function_call                go to state 48
+
+
+state 192
+
+   98 function_content: bunch_of_statements telugu_return telugu_finish . bunch_of_statements
+
+    error  shift, and go to state 11
+    EOL    shift, and go to state 1
+
+    EOL                          [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_DATATYPE              reduce using rule 55 (bunch_of_statements)
+    TELUGU_IF                    reduce using rule 55 (bunch_of_statements)
+    TELUGU_WHILE                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_OPEN_FLOOR_BRACKET    reduce using rule 55 (bunch_of_statements)
+    TELUGU_CLOSED_FLOOR_BRACKET  reduce using rule 55 (bunch_of_statements)
+    TELUGU_IDENTIFIER            reduce using rule 55 (bunch_of_statements)
+    TELUGU_PRINT                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_INPUT                 reduce using rule 55 (bunch_of_statements)
+
+    eol                  go to state 21
+    bunch_of_statements  go to state 195
+
+
+state 193
+
+   52 exp: exp . telugu_arithmetic_operator exp
+   53    | exp . telugu_logical_operator exp
+   99 function_content: bunch_of_statements telugu_return exp . telugu_finish bunch_of_statements
+
+    TELUGU_ARITHMETIC_OPERATOR  shift, and go to state 116
+    TELUGU_LOGICAL_OPERATOR     shift, and go to state 117
+    TELUGU_FINISH               shift, and go to state 18
+
+    telugu_arithmetic_operator  go to state 119
+    telugu_logical_operator     go to state 120
+    telugu_finish               go to state 196
+
+
+state 194
+
+   73 elif_repeat: elif_repeat telugu_elif telugu_open_curly_bracket condition telugu_closed_curly_bracket telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket . elif_repeat
+
+    EOL  shift, and go to state 1
+
+    EOL       [reduce using rule 71 (elif_repeat)]
+    $default  reduce using rule 71 (elif_repeat)
+
+    eol          go to state 67
+    elif_repeat  go to state 197
+
+
+state 195
+
+   57 bunch_of_statements: bunch_of_statements . eol
+   58                    | bunch_of_statements . if_else_ladder bunch_of_statements
+   59                    | bunch_of_statements . telugu_input telugu_open_curly_bracket telugu_identifier telugu_closed_curly_bracket telugu_finish bunch_of_statements
+   60                    | bunch_of_statements . while_loop bunch_of_statements
+   61                    | bunch_of_statements . print_statement telugu_finish bunch_of_statements
+   62                    | bunch_of_statements . variable_declaration telugu_finish bunch_of_statements
+   63                    | bunch_of_statements . telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket bunch_of_statements
+   64                    | bunch_of_statements . function_call telugu_finish bunch_of_statements
+   65                    | bunch_of_statements . equation telugu_finish bunch_of_statements
+   98 function_content: bunch_of_statements telugu_return telugu_finish bunch_of_statements .
+
+    EOL                        shift, and go to state 1
+    TELUGU_DATATYPE            shift, and go to state 26
+    TELUGU_IF                  shift, and go to state 27
+    TELUGU_WHILE               shift, and go to state 28
+    TELUGU_OPEN_FLOOR_BRACKET  shift, and go to state 29
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_PRINT               shift, and go to state 31
+    TELUGU_INPUT               shift, and go to state 32
+
+    EOL       [reduce using rule 98 (function_content)]
+    $default  reduce using rule 98 (function_content)
+
+    eol                        go to state 51
+    telugu_identifier          go to state 34
+    telugu_print               go to state 35
+    telugu_input               go to state 36
+    telugu_datatype            go to state 37
+    telugu_if                  go to state 38
+    telugu_while               go to state 39
+    telugu_open_floor_bracket  go to state 40
+    if_statement               go to state 42
+    if_else_ladder             go to state 43
+    while_loop                 go to state 44
+    variable_declaration       go to state 45
+    equation                   go to state 46
+    print_statement            go to state 47
+    function_call              go to state 48
+
+
+state 196
+
+   99 function_content: bunch_of_statements telugu_return exp telugu_finish . bunch_of_statements
+
+    error  shift, and go to state 11
+    EOL    shift, and go to state 1
+
+    EOL                          [reduce using rule 55 (bunch_of_statements)]
+    TELUGU_DATATYPE              reduce using rule 55 (bunch_of_statements)
+    TELUGU_IF                    reduce using rule 55 (bunch_of_statements)
+    TELUGU_WHILE                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_OPEN_FLOOR_BRACKET    reduce using rule 55 (bunch_of_statements)
+    TELUGU_CLOSED_FLOOR_BRACKET  reduce using rule 55 (bunch_of_statements)
+    TELUGU_IDENTIFIER            reduce using rule 55 (bunch_of_statements)
+    TELUGU_PRINT                 reduce using rule 55 (bunch_of_statements)
+    TELUGU_INPUT                 reduce using rule 55 (bunch_of_statements)
+
+    eol                  go to state 21
+    bunch_of_statements  go to state 198
+
+
+state 197
+
+   73 elif_repeat: elif_repeat . telugu_elif telugu_open_curly_bracket condition telugu_closed_curly_bracket telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket elif_repeat
+   73            | elif_repeat telugu_elif telugu_open_curly_bracket condition telugu_closed_curly_bracket telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket elif_repeat .
+
+    TELUGU_ELIF  shift, and go to state 101
+
+    TELUGU_ELIF  [reduce using rule 73 (elif_repeat)]
+    $default     reduce using rule 73 (elif_repeat)
+
+    telugu_elif  go to state 104
+
+
+state 198
+
+   57 bunch_of_statements: bunch_of_statements . eol
+   58                    | bunch_of_statements . if_else_ladder bunch_of_statements
+   59                    | bunch_of_statements . telugu_input telugu_open_curly_bracket telugu_identifier telugu_closed_curly_bracket telugu_finish bunch_of_statements
+   60                    | bunch_of_statements . while_loop bunch_of_statements
+   61                    | bunch_of_statements . print_statement telugu_finish bunch_of_statements
+   62                    | bunch_of_statements . variable_declaration telugu_finish bunch_of_statements
+   63                    | bunch_of_statements . telugu_open_floor_bracket bunch_of_statements telugu_closed_floor_bracket bunch_of_statements
+   64                    | bunch_of_statements . function_call telugu_finish bunch_of_statements
+   65                    | bunch_of_statements . equation telugu_finish bunch_of_statements
+   99 function_content: bunch_of_statements telugu_return exp telugu_finish bunch_of_statements .
+
+    EOL                        shift, and go to state 1
+    TELUGU_DATATYPE            shift, and go to state 26
+    TELUGU_IF                  shift, and go to state 27
+    TELUGU_WHILE               shift, and go to state 28
+    TELUGU_OPEN_FLOOR_BRACKET  shift, and go to state 29
+    TELUGU_IDENTIFIER          shift, and go to state 30
+    TELUGU_PRINT               shift, and go to state 31
+    TELUGU_INPUT               shift, and go to state 32
+
+    EOL       [reduce using rule 99 (function_content)]
+    $default  reduce using rule 99 (function_content)
+
+    eol                        go to state 51
+    telugu_identifier          go to state 34
+    telugu_print               go to state 35
+    telugu_input               go to state 36
+    telugu_datatype            go to state 37
+    telugu_if                  go to state 38
+    telugu_while               go to state 39
+    telugu_open_floor_bracket  go to state 40
+    if_statement               go to state 42
+    if_else_ladder             go to state 43
+    while_loop                 go to state 44
+    variable_declaration       go to state 45
+    equation                   go to state 46
+    print_statement            go to state 47
+    function_call              go to state 48

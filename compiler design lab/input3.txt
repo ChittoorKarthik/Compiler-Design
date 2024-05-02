@@ -1,12 +1,16 @@
-thechko numpy;
-sankhya x;
-theesko(x);
-a=b*(2-4);
-chupi("hello world!");
-sankhya arr[7];
-okavela(a+3 samanam 2){
-    x=3;
+okavela(9 leda 10){
+    sankhya d=9;
+    okavela(3 chinnadi 4){
+        sankhya c=3;
+    }
+    lekaokavela(5 samanam 6){
+        sankhya b=5;
+    }
+    sankhya abc=999;
+}
+lekaokavela(11 samanam 12){
+    sankhya e=11;
 }
 lekapothe{
-    x=5;
+    sankhya f=12;
 }

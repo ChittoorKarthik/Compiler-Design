@@ -78,10 +78,10 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 24 "t2parser.y"
+#line 174 "t2parser.y"
  
 	struct var_name { 
-		char name[100]; 
+		char name[10000]; 
 		struct node* nd;
 	} nd_obj; 
 

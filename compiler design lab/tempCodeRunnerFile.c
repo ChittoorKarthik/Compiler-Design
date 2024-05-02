@@ -1,22 +1,10 @@
-#include <stdio.h>
-#include <string.h>
-
-void unput(char *input_buffer, int position, int length) {
-    memmove(input_buffer + position, input_buffer + position + length, strlen(input_buffer) - position - length + 1);
-}
-
+#include<stdio.h>
+#include<string.h>
 int main() {
-    char input_buffer[] = "+23456789";
-    int position = 1; // Position of the first character of the substring to "unput"
-    int length = 8;   // Length of the substring to "unput"
-    
-    // Before unput
-    printf("Original string: %s\n", input_buffer);
-    
-    unput(input_buffer, position, length);
-    
-    // After unput
-    printf("Modified string: %s\n", input_buffer);
-    
+    char *exp_type = " ";
+    if(strcmp(exp_type," ")==0) {
+        strcpy(exp_type, "sankhya");
+    }
+    printf("%s\n", exp_type);
     return 0;
 }

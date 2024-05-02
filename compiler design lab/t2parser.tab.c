@@ -75,6 +75,9 @@
     #include<string.h>
     #include<stdlib.h>
     #include<ctype.h>
+    #include <limits.h>
+    // #include"lex.yy.c"  // this is creating multiple definitions
+
     // Declaration of tree
     struct node {
         int num_children;       // Number of children
@@ -86,12 +89,159 @@
     struct node* mknode(int num_children, struct node **children, char *token) ;
     void printtree(struct node* tree);
     void printInorder(struct node *tree);
+    void add(char);
     void insert_type();
+    int search(char *);
+
+    void check_declaration(char *);
+	void check_return_type(char *);
+	char *get_type(char *);
+    char *get_datatype(char *);
+
+    struct dataType {
+        char * id_name;
+        int used;   // for optimization stage - to check if the declared variable is used anywhere else in the program
+        char * data_type;
+        char * type;
+        int line_no;
+        int thisscope;
+        int num_params;
+        int range[10][2];  // [start index of first computation in icg,end index of assignment in icg for that chunk]
+        int range_count;
+    } symbol_table[10000];
+
+    int count=0;
+    int q;
+    char type[10];
+    extern int countn;
+    extern int scope;
+    int curr_num_params=0;
+    int curr_num_args=0;
+    extern char* yy_text;
+    char exp_type[30];  // will be empty if no expression is there
+    int sem_errors=0;
+	char buff[10000];
+	char errors[10][10000];
+    int oldscope=-1;
+    int performedConstantFolding=0;
+
+    int firstexpvalue=-1000000,secondexpvalue=-1000000;
+
+    // Intermediate code generation
+    int ic_idx=0;    // used to index the intermediate 3 address codes to show them together later in output
+	int label[10000];     // label stack to store the order of labels in the intermediate code
+                        // label number in the intermediate code -> GOTO L4
+                        // LABEL L4: ....
+    int ifelsetracker=-1;  // used to store the ending label for an if-elseLadder
+    int jumpcorrection[10000]; // jumpcorrection[instruction number] = label number after a if-else Ladder
+    int lastjumps[10000];
+    int lastjumpstackpointer=0;
+    int laddercounts[10000];
+    int laddercountstackpointer=0;
+
+    int stackpointer=0; // used to index the label stack
+    int labelsused=0;   // used to keep track of the number of labels used in the intermediate code
+    int looplabel[10000]; // another stack
+    int looplabelstackpointer=0; // another stack pointer
+    int insNumOfLabel[10000]; // used to store the instruction number of each label
+
+    int gotolabel[10000]; // another stack
+    int gotolabelstackpointer=0; // another stack pointer
+    
+    int rangestart=-1,rangeend=-1;  // used to store the range of instructions for a chunk of variable declaration/assignment code temperorily
+    int uselessranges[10000][2];  // used to store the range of instructions for a chunk of useless variable declaration/assignment code overall
+    int uselessrangescount=0;
+
+    char icg[10000][20];  // stores the intermediate code instructions themselves as strings
+    int isleader[10000];  // stores whether the instruction is a leader or not
+    int registerIndex=0;  // used to index the registers used in the intermediate code
+    int registers[10000];   // stores the registers used in the intermediate code
+    int regstackpointer=0; // used to index the register stack
+    int firstreg=-1,secondreg=-1,thirdreg=-1; // used to track regIndices in exp*exp 
+
+    //finish writing the reserved words,there are more reserved words
+    const int reserved_count = 13;   // why is this not working for reserved[reserved_count][20]???
+	char reserved[13][20] = {"sankhya", "thelu", "aksharam", "pani", "okavela", "lekaokavela",
+    "lekapothe", "aithaunte", "ivvu", "thechko","theesko","chupi","theega"};
+
+    int stringToInt(const char *str) {
+        int result = 0;
+        int sign = 1;
+        int i = 0;
+        
+        // Handling negative numbers
+        if (str[0] == '-') {
+            sign = -1;
+            i = 1;
+        }
+        
+        // Iterate through each character of the string
+        for (; str[i] != '\0'; ++i) {
+            // Ignore if it's a negative sign (already handled) or positive sign
+            if (str[i] == '-' || str[i] == '+') {
+                continue;
+            }
+            
+            // Check if character is a digit
+            if (str[i] >= '0' && str[i] <= '9') {
+                // Update result by multiplying it by 10 and adding the digit
+                result = result * 10 + (str[i] - '0');
+            } else {
+                // If non-digit character encountered, return 0 (or handle error as required)
+                return 0;
+            }
+        }
+        
+        // Apply sign to the result
+        return sign * result;
+    }
+
+    // Function to mark a variable as used if found in the symbol table
+        void markVariableAsUsed(const char *id_name) {
+            for (int i = 0; i < 10000; ++i) {
+                if (symbol_table[i].id_name != NULL && strcmp(symbol_table[i].id_name, id_name) == 0) {
+                    symbol_table[i].used = 1;
+                    return;
+                }
+            }
+        }
+
+    // Function to search for an identifier in the symbol table and return its index if found
+    int findIdentifierIndex(char *id_name) {
+        for (int i = 0; i < 10000; i++) {
+            if (symbol_table[i].id_name != NULL && strcmp(symbol_table[i].id_name, id_name) == 0) {
+                return i; // Return the index if found
+            }
+        }
+        return -1; // Return -1 if not found
+    }
+
+    // Function to swap two ranges
+    void swapRanges(int range1[], int range2[]) {
+        int tempStart = range1[0];
+        int tempEnd = range1[1];
+        range1[0] = range2[0];
+        range1[1] = range2[1];
+        range2[0] = tempStart;
+        range2[1] = tempEnd;
+    }
+
+    // Function to sort the 2D array of ranges
+    void sortRanges(int ranges[][2], int rangeCount) {
+        for (int i = 0; i < rangeCount - 1; i++) {
+            for (int j = 0; j < rangeCount - i - 1; j++) {
+                if (ranges[j][0] > ranges[j + 1][0]) {
+                    swapRanges(ranges[j], ranges[j + 1]);
+                }
+            }
+        }
+    }
+    
 
 
 
 /* Line 189 of yacc.c  */
-#line 95 "t2parser.tab.c"
+#line 245 "t2parser.tab.c"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -157,17 +307,17 @@ typedef union YYSTYPE
 {
 
 /* Line 214 of yacc.c  */
-#line 24 "t2parser.y"
+#line 174 "t2parser.y"
  
 	struct var_name { 
-		char name[100]; 
+		char name[10000]; 
 		struct node* nd;
 	} nd_obj; 
 
 
 
 /* Line 214 of yacc.c  */
-#line 171 "t2parser.tab.c"
+#line 321 "t2parser.tab.c"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -179,7 +329,7 @@ typedef union YYSTYPE
 
 
 /* Line 264 of yacc.c  */
-#line 183 "t2parser.tab.c"
+#line 333 "t2parser.tab.c"
 
 #ifdef short
 # undef short
@@ -394,16 +544,16 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  7
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   581
+#define YYLAST   617
 
 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  32
 /* YYNNTS -- Number of nonterminals.  */
-#define YYNNTS  51
+#define YYNNTS  87
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  106
+#define YYNRULES  146
 /* YYNRULES -- Number of states.  */
-#define YYNSTATES  193
+#define YYNSTATES  241
 
 /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
 #define YYUNDEFTOK  2
@@ -454,70 +604,86 @@ static const yytype_uint16 yyprhs[] =
        0,     0,     3,     5,     7,     9,    11,    13,    15,    17,
       19,    21,    23,    25,    27,    29,    31,    33,    35,    37,
       39,    41,    43,    45,    47,    49,    51,    53,    55,    57,
-      59,    61,    63,    65,    67,    69,    70,    73,    76,    81,
-      86,    90,    94,    96,    98,   100,   102,   104,   106,   111,
-     115,   119,   123,   128,   129,   132,   135,   139,   147,   151,
-     156,   161,   166,   172,   177,   180,   182,   186,   190,   198,
-     199,   202,   212,   213,   216,   221,   225,   228,   236,   241,
-     244,   250,   251,   256,   257,   261,   262,   264,   266,   270,
-     274,   276,   280,   287,   290,   292,   297,   303,   304,   307,
-     310,   313,   316,   320,   324,   329,   338
+      59,    61,    63,    65,    67,    69,    71,    73,    75,    76,
+      79,    82,    87,    92,    96,    97,   102,   104,   106,   108,
+     110,   112,   114,   119,   123,   124,   125,   131,   132,   133,
+     139,   140,   141,   147,   148,   154,   155,   158,   161,   162,
+     163,   169,   177,   181,   186,   191,   197,   202,   207,   210,
+     212,   213,   214,   220,   221,   222,   228,   229,   230,   240,
+     241,   244,   245,   246,   247,   260,   261,   264,   269,   270,
+     275,   276,   280,   281,   282,   283,   294,   295,   301,   304,
+     310,   311,   316,   317,   318,   319,   325,   326,   328,   330,
+     332,   336,   338,   339,   340,   346,   347,   355,   358,   361,
+     365,   367,   372,   378,   383,   384,   387,   390,   393,   396,
+     400,   404,   409,   410,   411,   422,   423
 };
 
 /* YYRHS -- A `-1'-separated list of the rules' RHS.  */
 static const yytype_int8 yyrhs[] =
 {
-      33,     0,    -1,    63,    -1,     3,    -1,    17,    -1,    29,
-      -1,     4,    -1,    31,    -1,     5,    -1,    30,    -1,     4,
-      -1,     5,    -1,    18,    -1,    28,    -1,     6,    -1,     7,
-      -1,     8,    -1,     9,    -1,    10,    -1,    11,    -1,    12,
-      -1,    13,    -1,    14,    -1,    18,    -1,    19,    -1,    20,
-      -1,    21,    -1,    22,    -1,    15,    -1,    16,    -1,    23,
-      -1,    25,    -1,    26,    -1,    27,    -1,    28,    -1,    -1,
-      63,    34,    -1,    34,    63,    -1,    63,    40,    35,    59,
-      -1,    40,    35,    59,    63,    -1,    63,    65,    63,    -1,
-      63,    81,    63,    -1,    37,    -1,    39,    -1,    62,    -1,
-      51,    -1,    35,    -1,    82,    -1,    35,    54,    64,    55,
-      -1,    52,    64,    53,    -1,    64,    42,    64,    -1,    64,
-      45,    64,    -1,    35,    54,    64,    55,    -1,    -1,    34,
-      65,    -1,    65,    34,    -1,    65,    70,    65,    -1,    65,
-      38,    52,    35,    53,    59,    65,    -1,    65,    71,    65,
-      -1,    65,    77,    59,    65,    -1,    65,    80,    59,    65,
-      -1,    65,    72,    59,    65,    -1,    65,    56,    65,    57,
-      65,    -1,    65,    82,    59,    65,    -1,     1,    59,    -1,
-      64,    -1,    64,    43,    64,    -1,    64,    45,    64,    -1,
-      47,    52,    66,    53,    56,    65,    57,    -1,    -1,    34,
-      68,    -1,    68,    48,    52,    66,    53,    56,    65,    57,
-      68,    -1,    -1,    34,    69,    -1,    49,    56,    65,    57,
-      -1,    67,    68,    69,    -1,    67,    68,    -1,    50,    52,
-      66,    53,    56,    65,    57,    -1,    46,    35,    44,    64,
-      -1,    46,    35,    -1,    46,    35,    54,    64,    55,    -1,
-      -1,    73,    46,    35,    58,    -1,    -1,    73,    46,    35,
-      -1,    -1,    35,    -1,    41,    -1,    35,    58,    75,    -1,
-      41,    58,    75,    -1,    75,    -1,    35,    44,    64,    -1,
-      35,    54,    64,    55,    44,    64,    -1,    78,    34,    -1,
-      65,    -1,    65,    61,    59,    65,    -1,    65,    61,    64,
-      59,    65,    -1,    -1,    79,    34,    -1,    34,    79,    -1,
-      79,    51,    -1,    79,    64,    -1,    79,    58,    51,    -1,
-      79,    58,    64,    -1,    36,    52,    79,    53,    -1,    60,
-      35,    52,    74,    53,    56,    78,    57,    -1,    35,    52,
-      76,    53,    -1
+      33,     0,    -1,    66,    -1,     3,    -1,    17,    -1,    17,
+      -1,    17,    -1,    17,    -1,    29,    -1,     4,    -1,    31,
+      -1,     5,    -1,    30,    -1,     4,    -1,     5,    -1,    18,
+      -1,    28,    -1,     6,    -1,     7,    -1,     8,    -1,     9,
+      -1,    10,    -1,    11,    -1,    12,    -1,    13,    -1,    14,
+      -1,    18,    -1,    19,    -1,    20,    -1,    21,    -1,    22,
+      -1,    15,    -1,    16,    -1,    23,    -1,    25,    -1,    26,
+      -1,    27,    -1,    28,    -1,    -1,    66,    34,    -1,    34,
+      66,    -1,    66,    43,    38,    62,    -1,    43,    38,    62,
+      66,    -1,    66,    76,    66,    -1,    -1,    66,    67,   114,
+      66,    -1,    40,    -1,    42,    -1,    65,    -1,    54,    -1,
+      35,    -1,   117,    -1,    35,    57,    68,    58,    -1,    55,
+      68,    56,    -1,    -1,    -1,    68,    69,    45,    68,    70,
+      -1,    -1,    -1,    68,    71,    48,    68,    72,    -1,    -1,
+      -1,    68,    73,    46,    68,    74,    -1,    -1,    35,    57,
+      68,    75,    58,    -1,    -1,    34,    76,    -1,    76,    34,
+      -1,    -1,    -1,    76,    92,    77,    76,    78,    -1,    76,
+      41,    55,    35,    56,    62,    76,    -1,    76,    95,    76,
+      -1,    76,   113,    62,    76,    -1,    76,    99,    62,    76,
+      -1,    76,    59,    76,    60,    76,    -1,    76,   117,    62,
+      76,    -1,    76,   107,    62,    76,    -1,     1,    62,    -1,
+      68,    -1,    -1,    -1,    68,    80,    46,    68,    81,    -1,
+      -1,    -1,    68,    82,    48,    68,    83,    -1,    -1,    -1,
+      50,    55,    79,    85,    56,    59,    76,    86,    60,    -1,
+      -1,    34,    87,    -1,    -1,    -1,    -1,    87,    51,    55,
+      79,    88,    56,    59,    76,    89,    60,    90,    87,    -1,
+      -1,    34,    91,    -1,    52,    59,    76,    60,    -1,    -1,
+      84,    87,    93,    91,    -1,    -1,    84,    87,    94,    -1,
+      -1,    -1,    -1,    53,    55,    79,    96,    56,    59,    76,
+      97,    60,    98,    -1,    -1,    49,    37,    47,   100,    68,
+      -1,    49,    37,    -1,    49,    37,    57,    68,    58,    -1,
+      -1,   101,    49,    37,    61,    -1,    -1,    -1,    -1,   103,
+     101,    49,    37,   104,    -1,    -1,    35,    -1,    44,    -1,
+      68,    -1,   105,    61,   105,    -1,   105,    -1,    -1,    -1,
+      35,    47,   108,   109,    68,    -1,    -1,    35,    57,    68,
+     110,    58,    47,    68,    -1,   111,    34,    -1,    34,   111,
+      -1,    76,   111,    76,    -1,    76,    -1,    76,    64,    62,
+      76,    -1,    76,    64,    68,    62,    76,    -1,    76,   117,
+      62,    76,    -1,    -1,   112,    34,    -1,    34,   112,    -1,
+     112,    54,    -1,   112,    68,    -1,   112,    61,    54,    -1,
+     112,    61,    68,    -1,    39,    55,   112,    56,    -1,    -1,
+      -1,    63,   115,    36,   116,    55,   102,    56,    59,   111,
+      60,    -1,    -1,    35,   118,    55,   106,    56,    -1
 };
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,    46,    46,    59,    61,    63,    66,    68,    70,    73,
-      75,    76,    77,    78,    82,    85,    88,    91,    94,    97,
-     100,   103,   106,   109,   112,   115,   118,   121,   124,   127,
-     130,   136,   139,   142,   145,   151,   152,   160,   168,   178,
-     188,   197,   215,   222,   229,   236,   243,   250,   257,   267,
-     281,   298,   307,   321,   322,   330,   338,   347,   360,   369,
-     379,   389,   399,   410,   420,   428,   435,   444,   455,   470,
-     471,   479,   496,   497,   505,   517,   526,   536,   551,   561,
-     569,   583,   584,   596,   597,   608,   609,   616,   623,   632,
-     643,   652,   661,   675,   683,   690,   700,   713,   714,   722,
-     730,   738,   746,   755,   766,   778,   794
+       0,   196,   196,   209,   211,   214,   222,   226,   228,   231,
+     233,   235,   238,   240,   241,   242,   243,   247,   250,   253,
+     256,   259,   262,   265,   268,   271,   274,   277,   280,   283,
+     286,   289,   292,   307,   313,   318,   321,   324,   330,   331,
+     339,   347,   358,   369,   378,   378,   397,   423,   439,   448,
+     464,   474,   481,   493,   531,   532,   531,   571,   571,   571,
+     598,   598,   598,   634,   634,   650,   651,   659,   667,   687,
+     667,   698,   711,   720,   730,   740,   751,   761,   771,   779,
+     786,   786,   786,   817,   817,   817,   829,   830,   829,   849,
+     850,   859,   861,   862,   858,   881,   882,   890,   903,   902,
+     919,   918,   944,   946,   947,   944,   962,   962,   986,  1002,
+    1017,  1018,  1031,  1032,  1032,  1032,  1044,  1045,  1054,  1063,
+    1072,  1085,  1094,  1094,  1094,  1117,  1117,  1132,  1140,  1148,
+    1157,  1164,  1174,  1185,  1197,  1198,  1206,  1214,  1222,  1230,
+    1239,  1250,  1262,  1262,  1262,  1283,  1283
 };
 #endif
 
@@ -537,22 +703,27 @@ static const char *const yytname[] =
   "TELUGU_PUNCTUATION_COMMA", "TELUGU_NEWLINE", "TELUGU_FINISH",
   "TELUGU_FUNCTION", "TELUGU_RETURN", "TELUGU_CHARACTER", "TELUGU_PRINT",
   "TELUGU_IMPORT", "TELUGU_INPUT", "$accept", "program", "eol",
-  "telugu_identifier", "telugu_print", "telugu_int", "telugu_input",
-  "telugu_float", "telugu_import", "telugu_constant",
-  "telugu_arithmetic_operator", "telugu_comparison_operator",
-  "telugu_assignment_operator", "telugu_logical_operator",
-  "telugu_datatype", "telugu_if", "telugu_elif", "telugu_else",
-  "telugu_while", "telugu_string", "telugu_open_curly_bracket",
-  "telugu_closed_curly_bracket", "telugu_open_square_bracket",
-  "telugu_closed_square_bracket", "telugu_open_floor_bracket",
-  "telugu_closed_floor_bracket", "telugu_punctuation_comma",
-  "telugu_finish", "telugu_function", "telugu_return", "telugu_character",
-  "input", "exp", "bunch_of_statements", "condition", "if_statement",
-  "elif_repeat", "else_statement", "if_else_ladder", "while_loop",
-  "variable_declaration", "parameters_repeat", "parameters_line",
-  "identifiers_repeat", "identifiers_line", "equation", "function_content",
-  "print_content", "print_statement", "function_declaration",
-  "function_call", 0
+  "telugu_identifier", "telugu_function_name",
+  "telugu_identifier_declaring", "telugu_imported_library", "telugu_print",
+  "telugu_int", "telugu_input", "telugu_float", "telugu_import",
+  "telugu_constant", "telugu_arithmetic_operator",
+  "telugu_comparison_operator", "telugu_assignment_operator",
+  "telugu_logical_operator", "telugu_datatype", "telugu_if", "telugu_elif",
+  "telugu_else", "telugu_while", "telugu_string",
+  "telugu_open_curly_bracket", "telugu_closed_curly_bracket",
+  "telugu_open_square_bracket", "telugu_closed_square_bracket",
+  "telugu_open_floor_bracket", "telugu_closed_floor_bracket",
+  "telugu_punctuation_comma", "telugu_finish", "telugu_function",
+  "telugu_return", "telugu_character", "input", "$@1", "exp", "$@2", "$@3",
+  "$@4", "$@5", "$@6", "$@7", "$@8", "bunch_of_statements", "$@9", "$@10",
+  "condition", "$@11", "$@12", "$@13", "$@14", "if_statement", "$@15",
+  "$@16", "elif_repeat", "$@17", "$@18", "$@19", "else_statement",
+  "if_else_ladder", "$@20", "$@21", "while_loop", "$@22", "$@23", "$@24",
+  "variable_declaration", "$@25", "parameters_repeat", "parameters_line",
+  "$@26", "$@27", "identifiers_repeat", "identifiers_line", "equation",
+  "$@28", "$@29", "$@30", "function_content", "print_content",
+  "print_statement", "function_declaration", "$@31", "$@32",
+  "function_call", "$@33", 0
 };
 #endif
 
@@ -572,16 +743,20 @@ static const yytype_uint16 yytoknum[] =
 static const yytype_uint8 yyr1[] =
 {
        0,    32,    33,    34,    35,    36,    37,    38,    39,    40,
-      41,    41,    41,    41,    42,    43,    44,    45,    46,    47,
+      41,    42,    43,    44,    44,    44,    44,    45,    46,    47,
       48,    49,    50,    51,    52,    53,    54,    55,    56,    57,
-      58,    59,    60,    61,    62,    63,    63,    63,    63,    63,
-      63,    63,    64,    64,    64,    64,    64,    64,    64,    64,
-      64,    64,    64,    65,    65,    65,    65,    65,    65,    65,
-      65,    65,    65,    65,    65,    66,    66,    66,    67,    68,
-      68,    68,    69,    69,    69,    70,    70,    71,    72,    72,
-      72,    73,    73,    74,    74,    75,    75,    75,    75,    75,
-      76,    77,    77,    78,    78,    78,    78,    79,    79,    79,
-      79,    79,    79,    79,    80,    81,    82
+      58,    59,    60,    61,    62,    63,    64,    65,    66,    66,
+      66,    66,    66,    66,    67,    66,    68,    68,    68,    68,
+      68,    68,    68,    68,    69,    70,    68,    71,    72,    68,
+      73,    74,    68,    75,    68,    76,    76,    76,    77,    78,
+      76,    76,    76,    76,    76,    76,    76,    76,    76,    79,
+      80,    81,    79,    82,    83,    79,    85,    86,    84,    87,
+      87,    88,    89,    90,    87,    91,    91,    91,    93,    92,
+      94,    92,    96,    97,    98,    95,   100,    99,    99,    99,
+     101,   101,   102,   103,   104,   102,   105,   105,   105,   105,
+     105,   106,   108,   109,   107,   110,   107,   111,   111,   111,
+     111,   111,   111,   111,   112,   112,   112,   112,   112,   112,
+     112,   113,   115,   116,   114,   118,   117
 };
 
 /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
@@ -590,14 +765,18 @@ static const yytype_uint8 yyr2[] =
        0,     2,     1,     1,     1,     1,     1,     1,     1,     1,
        1,     1,     1,     1,     1,     1,     1,     1,     1,     1,
        1,     1,     1,     1,     1,     1,     1,     1,     1,     1,
-       1,     1,     1,     1,     1,     0,     2,     2,     4,     4,
-       3,     3,     1,     1,     1,     1,     1,     1,     4,     3,
-       3,     3,     4,     0,     2,     2,     3,     7,     3,     4,
-       4,     4,     5,     4,     2,     1,     3,     3,     7,     0,
-       2,     9,     0,     2,     4,     3,     2,     7,     4,     2,
-       5,     0,     4,     0,     3,     0,     1,     1,     3,     3,
-       1,     3,     6,     2,     1,     4,     5,     0,     2,     2,
-       2,     2,     3,     3,     4,     8,     4
+       1,     1,     1,     1,     1,     1,     1,     1,     0,     2,
+       2,     4,     4,     3,     0,     4,     1,     1,     1,     1,
+       1,     1,     4,     3,     0,     0,     5,     0,     0,     5,
+       0,     0,     5,     0,     5,     0,     2,     2,     0,     0,
+       5,     7,     3,     4,     4,     5,     4,     4,     2,     1,
+       0,     0,     5,     0,     0,     5,     0,     0,     9,     0,
+       2,     0,     0,     0,    12,     0,     2,     4,     0,     4,
+       0,     3,     0,     0,     0,    10,     0,     5,     2,     5,
+       0,     4,     0,     0,     0,     5,     0,     1,     1,     1,
+       3,     1,     0,     0,     5,     0,     7,     2,     2,     3,
+       1,     4,     5,     4,     0,     2,     2,     2,     2,     3,
+       3,     4,     0,     0,    10,     0,     5
 };
 
 /* YYDEFACT[STATE-NAME] -- Default rule to reduce with in state
@@ -605,184 +784,211 @@ static const yytype_uint8 yyr2[] =
    means the default is an error.  */
 static const yytype_uint8 yydefact[] =
 {
-      35,     3,     9,     0,    35,     0,     0,     1,     0,     4,
-       0,     0,    32,     0,     0,     0,    35,    35,    31,    35,
-      64,     0,    54,     0,     0,    18,    19,    22,    28,     5,
-       7,    35,     0,     0,     0,     0,     0,     0,     0,     0,
-      69,     0,     0,     0,     0,     0,     0,     0,     0,    55,
-      38,    24,    81,    16,    26,     0,    85,     0,    97,     0,
-      79,     0,     0,     0,    69,    72,    56,    58,     0,     0,
-       0,     0,     0,     0,     6,     8,    23,    34,    46,    42,
-      43,    45,     0,    44,    91,    47,    10,    11,    12,    13,
-      86,    87,    90,     0,     0,    97,     0,     0,     0,     0,
-      65,     0,     0,    29,     0,    70,    20,    21,    72,     0,
-       0,    75,    61,    59,    60,    63,     0,    25,     0,     0,
-       0,    14,    17,     0,     0,    30,    85,    85,   106,    27,
-       0,    99,    98,    45,   104,     0,   101,     0,    78,     0,
-      15,     0,     0,     0,     0,    62,    73,     0,     0,    84,
-       0,     0,    49,    50,    51,    88,    89,     0,    45,   103,
-       0,    80,    66,    51,     0,     0,     0,     0,    82,    94,
-       0,    48,    92,    57,     0,     0,     0,    74,    33,     0,
-      93,   105,    68,    77,     0,     0,     0,     0,    95,     0,
-      69,    96,    71
+      38,     3,    12,     0,    38,     0,     0,     1,     0,     7,
+       0,     0,     0,     0,     0,    38,    34,    38,    78,     0,
+      66,     0,    35,   142,    38,    21,    22,    25,    31,     4,
+       8,    10,    38,   145,     0,     0,     0,     0,     0,     0,
+       0,    89,    68,     0,     0,     0,     0,     0,     0,    67,
+      41,     0,     0,    19,    29,   122,     0,     0,    27,   134,
+       0,     6,   108,     0,     0,     0,    89,    98,     0,    72,
+       0,     0,     0,     0,     5,   143,   123,     9,    11,    26,
+      37,    50,    46,    47,    49,     0,    48,    54,    51,   116,
+     134,     0,     0,   106,     0,    54,    86,   102,    32,     0,
+      90,    23,     0,    95,   101,    69,    74,    77,    73,    76,
+       0,     0,     0,    54,     0,     0,     0,     0,     9,    11,
+      26,    37,    50,   118,   119,   121,     0,   136,    28,    33,
+     135,    49,   141,     0,   138,     0,     0,    54,     0,     0,
+       0,     0,    75,     0,    24,    95,     0,    99,    70,   112,
+      54,    54,    53,    17,     0,    20,     0,    18,     0,    30,
+       0,   116,   146,    49,   140,     0,    54,   109,     0,     0,
+       0,     0,    91,    96,     0,     0,   110,    52,     0,    55,
+      58,    61,     0,   120,    71,    54,    54,     0,     0,     0,
+       0,     0,     0,    64,    56,    59,    62,    54,    82,    85,
+      87,   103,     0,    97,     0,     0,     0,     0,     0,     0,
+       0,     0,   114,    88,   104,    92,     0,   128,    36,     0,
+       0,     0,     0,   127,   144,   111,   115,   105,     0,     0,
+      54,     0,   129,     0,    93,   131,     0,    76,    89,   132,
+      94
 };
 
 /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int16 yydefgoto[] =
 {
-      -1,     3,    21,    32,    33,    79,    34,    80,     5,    91,
-     123,   141,    55,   124,    35,    36,   109,   110,    37,    81,
-      82,   118,    57,   130,    38,   104,   135,    19,    15,   179,
-      83,     8,   100,    16,   101,    40,    65,   111,    41,    42,
-      43,    72,    73,    92,    93,    44,   170,    96,    45,    17,
-      46
+      -1,     3,    19,    33,    75,    62,    10,    34,    82,    35,
+      83,     5,   123,   154,   158,    55,   156,    36,    37,   102,
+     146,    38,    84,    85,   132,   112,   160,    39,    99,   133,
+      17,    23,   220,    86,     8,    14,    95,   114,   194,   115,
+     195,   116,   196,   178,    15,    68,   148,    96,   138,   198,
+     139,   199,    41,   140,   206,    67,   189,   228,   238,   147,
+      42,   103,   104,    43,   141,   207,   227,    44,   136,   192,
+     175,   176,   226,   125,   126,    45,    76,   111,   117,   217,
+      91,    46,    24,    51,   110,    88,    57
 };
 
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
    STATE-NUM.  */
-#define YYPACT_NINF -131
+#define YYPACT_NINF -136
 static const yytype_int16 yypact[] =
 {
-      11,  -131,  -131,    23,    11,    34,   331,  -131,   353,  -131,
-       3,     3,  -131,   375,    34,    34,   222,    11,  -131,    11,
-    -131,   309,   525,     3,    42,  -131,  -131,  -131,  -131,  -131,
-    -131,    11,     5,    42,    42,    34,    42,    42,   485,   397,
-      69,   309,   309,     3,     3,     3,     3,   419,   441,  -131,
-    -131,  -131,    57,  -131,  -131,   181,   106,   181,    69,    34,
-      24,   181,   181,   494,    69,   127,   525,   525,   309,   309,
-     309,   309,    76,    77,  -131,  -131,  -131,  -131,   131,  -131,
-    -131,  -131,   181,  -131,   132,  -131,  -131,  -131,  -131,  -131,
-      82,    82,  -131,    77,   113,    69,   545,    77,   181,   181,
-     140,    77,    77,  -131,   309,    81,  -131,  -131,    17,    42,
-      94,  -131,   525,   525,   525,   525,    34,  -131,    94,   181,
-      79,  -131,  -131,   181,   181,  -131,   106,   106,  -131,  -131,
-     110,   299,  -131,  -131,  -131,   181,   132,     3,   132,   113,
-    -131,   181,   181,    94,    94,   525,  -131,   181,   485,    82,
-     463,   113,  -131,   132,   132,  -131,  -131,   181,  -131,   132,
-     309,  -131,   132,   132,   485,   485,    77,   494,  -131,   516,
-      46,  -131,   132,   525,   494,   494,    94,  -131,  -131,   553,
-    -131,  -131,  -131,  -131,   485,   485,   111,   494,   525,   485,
-      69,   525,    81
+       7,  -136,  -136,    46,     7,    30,   409,  -136,   433,  -136,
+      50,    50,   455,    30,    45,   552,  -136,     7,  -136,   374,
+     574,    50,  -136,  -136,     7,  -136,  -136,  -136,  -136,  -136,
+    -136,  -136,     7,     6,    65,    65,   104,    65,    65,   154,
+     477,   129,  -136,   374,    50,    50,    50,    50,   499,  -136,
+    -136,   120,   521,  -136,  -136,  -136,   413,    65,  -136,   129,
+     123,  -136,     6,   413,   413,   243,   129,   146,   374,   574,
+     374,   374,   374,   374,  -136,  -136,  -136,  -136,  -136,  -136,
+    -136,   140,  -136,  -136,  -136,   413,  -136,    16,  -136,   582,
+     129,   589,   142,  -136,   413,   147,  -136,  -136,  -136,   374,
+     146,  -136,    65,    13,  -136,   574,   574,   574,   574,   574,
+      65,   413,   413,   171,   157,   163,   167,   155,  -136,  -136,
+      31,    56,    62,  -136,   122,   156,   142,   285,  -136,  -136,
+    -136,  -136,  -136,   413,   122,    50,   413,   144,   167,   163,
+     142,   142,   574,   413,  -136,    13,   172,  -136,  -136,   184,
+      24,   144,  -136,  -136,   413,  -136,   413,  -136,   413,  -136,
+     187,   582,  -136,  -136,   122,   374,    85,  -136,   413,   413,
+     172,   172,  -136,  -136,   154,   142,  -136,  -136,   155,   190,
+      12,   122,   413,   156,   574,   179,   205,   154,   154,   142,
+     243,   172,   193,  -136,  -136,  -136,  -136,    95,  -136,  -136,
+     574,   574,   172,  -136,   324,   104,   181,   181,   154,   324,
+     543,    52,   156,  -136,  -136,   574,   543,   129,  -136,   324,
+      68,   154,    50,  -136,  -136,  -136,  -136,  -136,   181,   154,
+     116,   154,   574,   324,  -136,   574,   154,   574,   129,   574,
+     146
 };
 
 /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int16 yypgoto[] =
 {
-    -131,  -131,     0,   149,  -131,  -131,  -131,  -131,    21,  -131,
-    -131,  -131,   -55,    28,    60,  -131,  -131,  -131,  -131,   -89,
-      70,   121,   -26,  -130,  -100,   -96,   -79,    -8,  -131,  -131,
-    -131,    73,     2,    12,   -60,  -131,   -63,    43,  -131,  -131,
-    -131,  -131,  -131,   -71,  -131,  -131,  -131,    47,  -131,  -131,
-     158
+    -136,  -136,     0,   188,  -136,    -7,   192,  -136,  -136,  -136,
+    -136,    22,  -136,  -136,    75,   -49,    67,    34,  -136,  -136,
+    -136,  -136,   -69,    79,   -63,   -28,   -98,  -135,   -68,  -123,
+      -2,  -136,  -136,  -136,   135,  -136,   225,  -136,  -136,  -136,
+    -136,  -136,  -136,  -136,    76,  -136,  -136,   -61,  -136,  -136,
+    -136,  -136,  -136,  -136,  -136,   -65,  -136,  -136,  -136,    77,
+    -136,  -136,  -136,  -136,  -136,  -136,  -136,  -136,  -136,  -136,
+    -136,  -136,  -136,    69,  -136,  -136,  -136,  -136,  -136,   -86,
+     133,  -136,  -136,  -136,  -136,    -8,  -136
 };
 
 /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
    positive, shift that token.  If negative, reduce the rule which
    number is the opposite.  If zero, do what YYDEFACT says.
    If YYTABLE_NINF, syntax error.  */
-#define YYTABLE_NINF -84
+#define YYTABLE_NINF -146
 static const yytype_int16 yytable[] =
 {
-       4,   105,   102,    20,     4,    98,    13,   133,    13,   161,
-     148,   126,   127,    53,     1,    50,    31,     4,   150,     4,
-       1,   171,    49,     7,    51,    22,    54,    14,    18,    14,
-     107,     4,    53,    22,    99,    68,    69,    70,    71,    13,
-      64,     2,   133,   164,   165,    54,   158,    13,    13,     1,
-      63,     9,   119,    66,    67,   155,   156,    84,    95,    94,
-      14,    51,   103,    49,    64,   108,    49,    49,    14,    14,
-     168,   177,     1,     6,   181,   157,   184,   -83,   182,   183,
-     112,   113,   114,   115,   120,   121,    25,   166,   122,    39,
-      47,   190,    48,   106,    52,    95,   132,   117,   136,   117,
-     138,   139,    56,    58,    59,   125,    61,    62,   108,    28,
-      86,    87,    49,    49,    49,    49,   145,   121,    53,   121,
-     122,   151,   122,     9,    88,   153,   154,   192,   142,   160,
-       1,   132,   116,   136,    89,   129,    18,   159,   121,   106,
-     107,   122,   131,   162,   163,    49,   121,   140,    56,   122,
-      51,   146,    54,     0,    10,     0,     0,     0,     0,   172,
-     167,     0,   169,    23,    24,     0,     0,    49,     0,    49,
-     180,   185,   173,    49,    49,    49,   174,   175,   189,   147,
-       0,   186,     0,     0,    60,    74,    75,    49,    49,     0,
-      64,    49,     0,     0,     0,     0,   187,   188,     9,    76,
-      51,   191,     0,     0,    78,    90,    78,     0,    97,    77,
-      78,    78,     0,    85,   128,    85,     0,   134,   137,    85,
-      85,     0,   143,   144,     0,     1,     0,     0,     0,     0,
-       0,    78,    25,    26,     0,     0,    27,    28,     0,     9,
-      85,   152,     0,     0,     0,    78,     0,    78,    78,     0,
-       0,    29,     2,    30,    85,     0,    85,    85,     0,     0,
-       0,     0,     0,     0,     0,   149,     0,     0,    78,     0,
-       0,     0,    78,    78,     0,    90,    90,    85,     0,     0,
-      78,    85,    85,     0,    78,     0,     0,   176,     0,    85,
-      78,    78,     0,    85,     0,     0,    78,     0,     0,    85,
-      85,     0,     1,    74,    75,    85,    78,     0,     0,   -53,
-      11,     0,     1,     0,     0,    85,     9,    76,    51,   -53,
-     -53,     0,   125,   -53,   -53,   -53,   -53,    77,    78,     0,
-       0,    -2,    11,     0,     1,   -53,   -53,    85,   -53,   -53,
-     -53,   -53,   -53,     0,     0,   -53,   -53,     0,   -53,     0,
-       0,     0,     0,   -37,    11,     0,     1,    12,     0,     0,
-     -53,     2,   -53,   -37,   -37,     0,     0,   -37,   -37,     0,
-     -37,     0,     0,     0,     0,   -36,    11,     0,     1,    12,
-       0,     0,   -37,     2,   -37,   -36,   -36,     0,     0,   -36,
-     -36,     0,   -36,     0,     0,     0,     0,   -40,    11,     0,
-       1,   -36,     0,     0,   -36,   -36,   -36,   -40,   -40,     0,
-       0,   -40,   -40,     0,   -40,     0,     0,     0,     0,   -41,
-      11,     0,     1,    12,     0,     0,   -40,     2,   -40,   -41,
-     -41,     0,     0,   -41,   -41,     0,   -41,     0,     0,     0,
-       0,   -39,    11,     0,     1,    12,     0,     0,   -41,     2,
-     -41,   -39,   -39,     0,     0,   -39,   -39,     0,   -39,     0,
-       0,     0,     0,     0,    11,     0,     1,    12,     0,     0,
-     -39,     2,   -39,   -53,   -53,     0,     0,   -53,   -53,   -53,
-     -53,     0,     0,     0,     0,     0,    11,     0,     1,     0,
-     -53,     0,   -53,     0,   -53,   -53,   -53,     1,     0,   -53,
-     -53,   -53,   -53,     0,    25,    26,     0,     0,    27,    28,
-     103,     9,     0,     0,   -53,     0,   -53,     0,     0,     1,
-       0,     0,     0,    29,     0,    30,    25,    26,     1,     0,
-      27,    28,     0,     9,     0,    25,    26,     0,     0,    27,
-      28,     0,     9,   178,     0,    29,     0,    30,     1,    74,
-      75,     0,     0,     0,    29,     0,    30,    74,    75,     0,
-       0,     0,     9,    76,    51,   117,     0,     0,   125,     0,
-       9,    76,    51,    77,     0,     0,     0,     0,    18,     0,
-       0,    77
+       4,   100,   161,    97,     4,    56,    12,    47,    12,    18,
+       1,   174,    47,    93,    53,    32,     1,     4,   -54,    50,
+      49,   -57,   131,   -60,     4,   -57,   144,    54,    13,   135,
+      13,   -60,     4,   -57,    94,   187,   188,     2,  -125,   167,
+      12,    66,    70,    71,    72,    73,     7,     9,    12,  -124,
+     152,   -15,    12,   177,   -15,     1,   204,    47,   131,    90,
+     161,    47,    13,   162,   163,    49,    66,   208,    98,    49,
+      13,    22,    77,    78,    13,    16,   -16,   170,   171,   -16,
+     193,  -145,   172,    54,    58,    29,    79,    58,    20,   225,
+      90,   130,   -60,    16,   -57,    20,    80,    47,    47,    47,
+      47,    47,   -60,   145,   -57,    49,    49,    49,    49,    49,
+    -107,   182,   191,    59,    60,    65,    63,    64,   211,    69,
+    -126,    61,   203,   -60,   221,   -57,   202,   130,   -54,   -60,
+     221,   -57,     1,   165,    47,     6,    89,    74,   213,   214,
+      29,    16,    49,   224,   105,   145,   106,   107,   108,   109,
+      40,   -60,    48,   -57,   -60,    11,   -57,     1,   101,    52,
+     234,    54,   128,   153,   -65,   -65,   159,   -79,   -65,   -65,
+     -65,   -65,   155,   240,   157,   142,    47,   159,   -60,   129,
+     -57,   143,    47,   -65,    49,   -65,   -60,    28,   -57,   149,
+      49,   128,    47,    47,  -113,    53,   -54,    98,   212,   -81,
+      49,    49,   222,    25,   209,    21,   169,    47,   222,   209,
+     219,   223,   -60,   168,   -57,    49,   219,   223,   229,   209,
+     233,   231,   173,   127,    47,   -84,   205,    47,   236,    47,
+     183,    47,    49,     0,     0,    49,     0,    49,    66,    49,
+       0,   184,     0,     0,    81,     0,     1,     0,    92,     0,
+     190,    81,    81,    25,    26,     0,     0,    27,    28,    98,
+      29,     0,     0,   200,   201,     0,     0,     0,     0,     0,
+       0,     0,    30,    81,    31,     0,     0,   122,     0,    81,
+     210,    87,    81,     0,   215,   216,   210,     0,     1,    77,
+      78,     0,   210,     0,     0,   216,     0,   232,     0,    81,
+      81,     0,    29,    79,    58,   235,     0,    20,   129,   237,
+     113,     0,   239,    80,   124,    81,   134,     0,     0,   137,
+       0,    81,     0,     0,    81,    11,     0,     1,     0,     0,
+       0,    81,     0,     0,   -65,   -65,   150,   151,   -65,   -65,
+     -65,   -65,    81,     0,    81,     0,    81,     0,     0,   122,
+       0,   -65,   134,   -65,     0,   -65,    81,    81,   164,     0,
+       0,   166,     0,     0,     0,     0,     0,     0,     0,     0,
+      81,     0,     0,     0,   -65,    11,     0,     1,     0,   179,
+       0,   180,     0,   181,   -65,   -65,   124,     0,   -65,   -65,
+     -65,   -65,     0,   185,   186,     0,     0,     0,     0,     0,
+     -65,   -65,     0,   -65,   -65,   -65,     0,   197,    81,    -2,
+      11,     0,     1,     0,     0,     0,     0,    77,    78,   -65,
+     -65,     0,     0,   -65,   -65,     0,   -65,     0,     0,     0,
+      29,    79,    58,   -40,    11,   -44,     1,     0,   -65,     2,
+     -65,    80,     0,   -40,   -40,   230,     0,   -40,   -40,     0,
+     -40,     0,     0,     0,     0,   -39,    11,     0,     1,   -40,
+       0,     0,   -40,     2,   -40,   -39,   -39,     0,     0,   -39,
+     -39,     0,   -39,     0,     0,     0,     0,   -43,    11,     0,
+       1,   -39,     0,     0,   -39,   -39,   -39,   -43,   -43,     0,
+       0,   -43,   -43,     0,   -43,     0,     0,     0,     0,   -42,
+      11,     0,     1,   -43,     0,     0,   -43,     2,   -43,   -42,
+     -42,     0,     0,   -42,   -42,     0,   -42,     0,     0,     0,
+       0,   -45,    11,     0,     1,   -42,     0,     0,   -42,     2,
+     -42,   -45,   -45,     0,     0,   -45,   -45,     0,   -45,     0,
+       0,     0,     0,     0,    11,     0,     1,   -44,     0,     0,
+     -45,     2,   -45,    25,    26,     1,     0,    27,    28,   -65,
+      29,     0,    25,    26,     0,     0,    27,    28,     0,    29,
+     218,     0,    30,     0,    31,     0,     0,     1,     0,     0,
+       0,    30,     2,    31,    25,    26,   118,   119,    27,    28,
+       0,    29,     1,    77,    78,     0,     0,     0,     0,    29,
+     120,    58,     0,    30,     0,    31,    29,    79,    58,   128,
+     121,     0,   129,     0,     0,     0,     0,    80
 };
 
 static const yytype_int16 yycheck[] =
 {
-       0,    64,    62,    11,     4,    60,     6,    96,     8,   139,
-     110,    90,    91,     8,     3,    23,    16,    17,   118,    19,
-       3,   151,    22,     0,    19,    13,    21,     6,    25,     8,
-      13,    31,     8,    21,    60,    43,    44,    45,    46,    39,
-      40,    30,   131,   143,   144,    21,   135,    47,    48,     3,
-      38,    17,    78,    41,    42,   126,   127,    55,    58,    57,
-      39,    19,    16,    63,    64,    65,    66,    67,    47,    48,
-     149,   167,     3,     0,   170,   130,   176,    20,   174,   175,
-      68,    69,    70,    71,    82,     6,    10,   147,     9,    16,
-      17,   187,    19,    12,    24,    95,    96,    20,    96,    20,
-      98,    99,    32,    33,    34,    23,    36,    37,   108,    15,
-       4,     5,   112,   113,   114,   115,   104,     6,     8,     6,
-       9,   119,     9,    17,    18,   123,   124,   190,   100,   137,
-       3,   131,    72,   131,    28,    22,    25,   135,     6,    12,
-      13,     9,    95,   141,   142,   145,     6,     7,    78,     9,
-      19,   108,    21,    -1,     5,    -1,    -1,    -1,    -1,   157,
-     148,    -1,   150,    14,    15,    -1,    -1,   167,    -1,   169,
-     170,   179,   160,   173,   174,   175,   164,   165,   186,   109,
-      -1,   179,    -1,    -1,    35,     4,     5,   187,   188,    -1,
-     190,   191,    -1,    -1,    -1,    -1,   184,   185,    17,    18,
-      19,   189,    -1,    -1,    55,    56,    57,    -1,    59,    28,
-      61,    62,    -1,    55,    93,    57,    -1,    96,    97,    61,
-      62,    -1,   101,   102,    -1,     3,    -1,    -1,    -1,    -1,
-      -1,    82,    10,    11,    -1,    -1,    14,    15,    -1,    17,
-      82,   120,    -1,    -1,    -1,    96,    -1,    98,    99,    -1,
-      -1,    29,    30,    31,    96,    -1,    98,    99,    -1,    -1,
-      -1,    -1,    -1,    -1,    -1,   116,    -1,    -1,   119,    -1,
-      -1,    -1,   123,   124,    -1,   126,   127,   119,    -1,    -1,
-     131,   123,   124,    -1,   135,    -1,    -1,   166,    -1,   131,
-     141,   142,    -1,   135,    -1,    -1,   147,    -1,    -1,   141,
-     142,    -1,     3,     4,     5,   147,   157,    -1,    -1,     0,
-       1,    -1,     3,    -1,    -1,   157,    17,    18,    19,    10,
-      11,    -1,    23,    14,    15,    16,    17,    28,   179,    -1,
-      -1,     0,     1,    -1,     3,    26,    27,   179,    29,    30,
-      31,    10,    11,    -1,    -1,    14,    15,    -1,    17,    -1,
-      -1,    -1,    -1,     0,     1,    -1,     3,    26,    -1,    -1,
-      29,    30,    31,    10,    11,    -1,    -1,    14,    15,    -1,
+       0,    66,   125,    64,     4,    33,     6,    15,     8,    11,
+       3,   146,    20,    62,     8,    15,     3,    17,     6,    21,
+      20,     9,    91,     7,    24,     9,    13,    21,     6,    92,
+       8,     7,    32,     9,    62,   170,   171,    30,    22,   137,
+      40,    41,    44,    45,    46,    47,     0,    17,    48,    25,
+     113,    20,    52,   151,    23,     3,   191,    65,   127,    59,
+     183,    69,    40,   126,   133,    65,    66,   202,    16,    69,
+      48,    26,     4,     5,    52,    25,    20,   140,   141,    23,
+     178,    19,   143,    21,    19,    17,    18,    19,    12,   212,
+      90,    91,     7,    25,     9,    19,    28,   105,   106,   107,
+     108,   109,     7,   103,     9,   105,   106,   107,   108,   109,
+      25,   160,   175,    34,    35,    39,    37,    38,   204,    43,
+      25,    17,   190,     7,   210,     9,   189,   127,     6,     7,
+     216,     9,     3,   135,   142,     0,    57,    17,   206,   207,
+      17,    25,   142,   211,    68,   145,    70,    71,    72,    73,
+      15,     7,    17,     9,     7,     1,     9,     3,    12,    24,
+     228,    21,    20,     6,    10,    11,    22,    20,    14,    15,
+      16,    17,     9,   238,     7,    99,   184,    22,     7,    23,
+       9,   102,   190,    29,   184,    31,     7,    15,     9,   110,
+     190,    20,   200,   201,    10,     8,     6,    16,   205,    20,
+     200,   201,   210,    10,   204,    13,   139,   215,   216,   209,
+     210,   211,     7,   138,     9,   215,   216,   217,   220,   219,
+     222,   221,   145,    90,   232,    20,   192,   235,   230,   237,
+     161,   239,   232,    -1,    -1,   235,    -1,   237,   238,   239,
+      -1,   165,    -1,    -1,    56,    -1,     3,    -1,    60,    -1,
+     174,    63,    64,    10,    11,    -1,    -1,    14,    15,    16,
+      17,    -1,    -1,   187,   188,    -1,    -1,    -1,    -1,    -1,
+      -1,    -1,    29,    85,    31,    -1,    -1,    89,    -1,    91,
+     204,    56,    94,    -1,   208,   209,   210,    -1,     3,     4,
+       5,    -1,   216,    -1,    -1,   219,    -1,   221,    -1,   111,
+     112,    -1,    17,    18,    19,   229,    -1,   231,    23,   233,
+      85,    -1,   236,    28,    89,   127,    91,    -1,    -1,    94,
+      -1,   133,    -1,    -1,   136,     1,    -1,     3,    -1,    -1,
+      -1,   143,    -1,    -1,    10,    11,   111,   112,    14,    15,
+      16,    17,   154,    -1,   156,    -1,   158,    -1,    -1,   161,
+      -1,    27,   127,    29,    -1,    31,   168,   169,   133,    -1,
+      -1,   136,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
+     182,    -1,    -1,    -1,     0,     1,    -1,     3,    -1,   154,
+      -1,   156,    -1,   158,    10,    11,   161,    -1,    14,    15,
+      16,    17,    -1,   168,   169,    -1,    -1,    -1,    -1,    -1,
+      26,    27,    -1,    29,    30,    31,    -1,   182,   220,     0,
+       1,    -1,     3,    -1,    -1,    -1,    -1,     4,     5,    10,
+      11,    -1,    -1,    14,    15,    -1,    17,    -1,    -1,    -1,
+      17,    18,    19,     0,     1,    26,     3,    -1,    29,    30,
+      31,    28,    -1,    10,    11,   220,    -1,    14,    15,    -1,
       17,    -1,    -1,    -1,    -1,     0,     1,    -1,     3,    26,
       -1,    -1,    29,    30,    31,    10,    11,    -1,    -1,    14,
       15,    -1,    17,    -1,    -1,    -1,    -1,     0,     1,    -1,
@@ -793,44 +999,44 @@ static const yytype_int16 yycheck[] =
       -1,     0,     1,    -1,     3,    26,    -1,    -1,    29,    30,
       31,    10,    11,    -1,    -1,    14,    15,    -1,    17,    -1,
       -1,    -1,    -1,    -1,     1,    -1,     3,    26,    -1,    -1,
-      29,    30,    31,    10,    11,    -1,    -1,    14,    15,    16,
-      17,    -1,    -1,    -1,    -1,    -1,     1,    -1,     3,    -1,
-      27,    -1,    29,    -1,    31,    10,    11,     3,    -1,    14,
-      15,    16,    17,    -1,    10,    11,    -1,    -1,    14,    15,
-      16,    17,    -1,    -1,    29,    -1,    31,    -1,    -1,     3,
-      -1,    -1,    -1,    29,    -1,    31,    10,    11,     3,    -1,
-      14,    15,    -1,    17,    -1,    10,    11,    -1,    -1,    14,
-      15,    -1,    17,    27,    -1,    29,    -1,    31,     3,     4,
-       5,    -1,    -1,    -1,    29,    -1,    31,     4,     5,    -1,
-      -1,    -1,    17,    18,    19,    20,    -1,    -1,    23,    -1,
-      17,    18,    19,    28,    -1,    -1,    -1,    -1,    25,    -1,
-      -1,    28
+      29,    30,    31,    10,    11,     3,    -1,    14,    15,    16,
+      17,    -1,    10,    11,    -1,    -1,    14,    15,    -1,    17,
+      27,    -1,    29,    -1,    31,    -1,    -1,     3,    -1,    -1,
+      -1,    29,    30,    31,    10,    11,     4,     5,    14,    15,
+      -1,    17,     3,     4,     5,    -1,    -1,    -1,    -1,    17,
+      18,    19,    -1,    29,    -1,    31,    17,    18,    19,    20,
+      28,    -1,    23,    -1,    -1,    -1,    -1,    28
 };
 
 /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
    symbol of state STATE-NUM.  */
 static const yytype_uint8 yystos[] =
 {
-       0,     3,    30,    33,    34,    40,    63,     0,    63,    17,
-      35,     1,    26,    34,    40,    60,    65,    81,    25,    59,
-      59,    34,    65,    35,    35,    10,    11,    14,    15,    29,
-      31,    34,    35,    36,    38,    46,    47,    50,    56,    63,
-      67,    70,    71,    72,    77,    80,    82,    63,    63,    34,
-      59,    19,    52,     8,    21,    44,    52,    54,    52,    52,
-      35,    52,    52,    65,    34,    68,    65,    65,    59,    59,
-      59,    59,    73,    74,     4,     5,    18,    28,    35,    37,
-      39,    51,    52,    62,    64,    82,     4,     5,    18,    28,
-      35,    41,    75,    76,    64,    34,    79,    35,    44,    54,
-      64,    66,    66,    16,    57,    68,    12,    13,    34,    48,
-      49,    69,    65,    65,    65,    65,    46,    20,    53,    54,
-      64,     6,     9,    42,    45,    23,    58,    58,    53,    22,
-      55,    79,    34,    51,    53,    58,    64,    53,    64,    64,
-       7,    43,    45,    53,    53,    65,    69,    52,    56,    35,
-      56,    64,    53,    64,    64,    75,    75,    44,    51,    64,
-      59,    55,    64,    64,    56,    56,    66,    65,    58,    65,
-      78,    55,    64,    65,    65,    65,    53,    57,    27,    61,
-      34,    57,    57,    57,    56,    59,    64,    65,    65,    59,
-      57,    65,    68
+       0,     3,    30,    33,    34,    43,    66,     0,    66,    17,
+      38,     1,    34,    43,    67,    76,    25,    62,    62,    34,
+      76,    38,    26,    63,   114,    10,    11,    14,    15,    17,
+      29,    31,    34,    35,    39,    41,    49,    50,    53,    59,
+      66,    84,    92,    95,    99,   107,   113,   117,    66,    34,
+      62,   115,    66,     8,    21,    47,    57,   118,    19,    55,
+      55,    17,    37,    55,    55,    76,    34,    87,    77,    76,
+      62,    62,    62,    62,    17,    36,   108,     4,     5,    18,
+      28,    35,    40,    42,    54,    55,    65,    68,   117,    55,
+      34,   112,    35,    47,    57,    68,    79,    79,    16,    60,
+      87,    12,    51,    93,    94,    76,    76,    76,    76,    76,
+     116,   109,    57,    68,    69,    71,    73,   110,     4,     5,
+      18,    28,    35,    44,    68,   105,   106,   112,    20,    23,
+      34,    54,    56,    61,    68,    56,   100,    68,    80,    82,
+      85,    96,    76,    55,    13,    34,    52,    91,    78,    55,
+      68,    68,    56,     6,    45,     9,    48,     7,    46,    22,
+      58,    61,    56,    54,    68,    62,    68,    58,    46,    48,
+      56,    56,    79,    91,    59,   102,   103,    58,    75,    68,
+      68,    68,    47,   105,    76,    68,    68,    59,    59,    88,
+      76,    56,   101,    58,    70,    72,    74,    68,    81,    83,
+      76,    76,    56,    60,    59,    49,    86,    97,    59,    34,
+      76,   111,    37,    60,    60,    76,    76,   111,    27,    34,
+      64,   111,   117,    34,    60,    61,   104,    98,    89,    62,
+      68,    34,    76,    62,    60,    76,    62,    76,    90,    76,
+      87
 };
 
 #define yyerrok		(yyerrstatus = 0)
@@ -1644,7 +1850,7 @@ yyreduce:
         case 2:
 
 /* Line 1455 of yacc.c  */
-#line 46 "t2parser.y"
+#line 196 "t2parser.y"
     {int num_children = 1;  // Number of children
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
         
@@ -1660,238 +1866,274 @@ yyreduce:
   case 3:
 
 /* Line 1455 of yacc.c  */
-#line 59 "t2parser.y"
+#line 209 "t2parser.y"
     {(yyval.nd_obj).nd = mknode(NULL, NULL, "newline");;}
     break;
 
   case 4:
 
 /* Line 1455 of yacc.c  */
-#line 61 "t2parser.y"
-    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
+#line 211 "t2parser.y"
+    {printf("CHECKING FOR %s\n",(yyvsp[(1) - (1)].nd_obj).name);check_declaration((yyvsp[(1) - (1)].nd_obj).name); printf("saw pure id2");(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
     break;
 
   case 5:
 
 /* Line 1455 of yacc.c  */
-#line 63 "t2parser.y"
-    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
+#line 214 "t2parser.y"
+    {printf("parser saw teluguFuncNamex");
+    (yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
     break;
 
   case 6:
 
 /* Line 1455 of yacc.c  */
-#line 66 "t2parser.y"
-    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
+#line 222 "t2parser.y"
+    { printf("saw varDeclareid");add('V');(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
     break;
 
   case 7:
 
 /* Line 1455 of yacc.c  */
-#line 68 "t2parser.y"
-    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
+#line 226 "t2parser.y"
+    { add('L');(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
     break;
 
   case 8:
 
 /* Line 1455 of yacc.c  */
-#line 70 "t2parser.y"
-    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
+#line 228 "t2parser.y"
+    {add('K');(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
     break;
 
   case 9:
 
 /* Line 1455 of yacc.c  */
-#line 73 "t2parser.y"
-    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
+#line 231 "t2parser.y"
+    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);add('i');;}
     break;
 
   case 10:
 
 /* Line 1455 of yacc.c  */
-#line 75 "t2parser.y"
-    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
+#line 233 "t2parser.y"
+    {add('K');(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
     break;
 
   case 11:
 
 /* Line 1455 of yacc.c  */
-#line 76 "t2parser.y"
-    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
+#line 235 "t2parser.y"
+    {add('f');(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
     break;
 
   case 12:
 
 /* Line 1455 of yacc.c  */
-#line 77 "t2parser.y"
+#line 238 "t2parser.y"
     {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
     break;
 
   case 13:
 
 /* Line 1455 of yacc.c  */
-#line 78 "t2parser.y"
-    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
+#line 240 "t2parser.y"
+    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);add('i');;}
     break;
 
   case 14:
 
 /* Line 1455 of yacc.c  */
-#line 82 "t2parser.y"
-    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
+#line 241 "t2parser.y"
+    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);add('f');;}
     break;
 
   case 15:
 
 /* Line 1455 of yacc.c  */
-#line 85 "t2parser.y"
-    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
+#line 242 "t2parser.y"
+    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);add('s');;}
     break;
 
   case 16:
 
 /* Line 1455 of yacc.c  */
-#line 88 "t2parser.y"
-    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
+#line 243 "t2parser.y"
+    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);add('c');;}
     break;
 
   case 17:
 
 /* Line 1455 of yacc.c  */
-#line 91 "t2parser.y"
+#line 247 "t2parser.y"
     {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
     break;
 
   case 18:
 
 /* Line 1455 of yacc.c  */
-#line 94 "t2parser.y"
+#line 250 "t2parser.y"
     {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
     break;
 
   case 19:
 
 /* Line 1455 of yacc.c  */
-#line 97 "t2parser.y"
-    {(yyval.nd_obj).nd = mknode(NULL, NULL, "if");;}
+#line 253 "t2parser.y"
+    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
     break;
 
   case 20:
 
 /* Line 1455 of yacc.c  */
-#line 100 "t2parser.y"
-    {(yyval.nd_obj).nd = mknode(NULL, NULL, "elif");;}
+#line 256 "t2parser.y"
+    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
     break;
 
   case 21:
 
 /* Line 1455 of yacc.c  */
-#line 103 "t2parser.y"
-    {(yyval.nd_obj).nd = mknode(NULL, NULL, "else");;}
+#line 259 "t2parser.y"
+    {insert_type();(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
     break;
 
   case 22:
 
 /* Line 1455 of yacc.c  */
-#line 106 "t2parser.y"
-    {(yyval.nd_obj).nd = mknode(NULL, NULL,"while");;}
+#line 262 "t2parser.y"
+    {add('K');(yyval.nd_obj).nd = mknode(NULL, NULL, "if");;}
     break;
 
   case 23:
 
 /* Line 1455 of yacc.c  */
-#line 109 "t2parser.y"
-    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
+#line 265 "t2parser.y"
+    {add('K');(yyval.nd_obj).nd = mknode(NULL, NULL, "elif");;}
     break;
 
   case 24:
 
 /* Line 1455 of yacc.c  */
-#line 112 "t2parser.y"
-    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
+#line 268 "t2parser.y"
+    {add('K');(yyval.nd_obj).nd = mknode(NULL, NULL, "else");;}
     break;
 
   case 25:
 
 /* Line 1455 of yacc.c  */
-#line 115 "t2parser.y"
-    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
+#line 271 "t2parser.y"
+    {add('K');(yyval.nd_obj).nd = mknode(NULL, NULL,"while");;}
     break;
 
   case 26:
 
 /* Line 1455 of yacc.c  */
-#line 118 "t2parser.y"
-    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
+#line 274 "t2parser.y"
+    {add('s');(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
     break;
 
   case 27:
 
 /* Line 1455 of yacc.c  */
-#line 121 "t2parser.y"
+#line 277 "t2parser.y"
     {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
     break;
 
   case 28:
 
 /* Line 1455 of yacc.c  */
-#line 124 "t2parser.y"
+#line 280 "t2parser.y"
     {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
     break;
 
   case 29:
 
 /* Line 1455 of yacc.c  */
-#line 127 "t2parser.y"
+#line 283 "t2parser.y"
     {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
     break;
 
   case 30:
 
 /* Line 1455 of yacc.c  */
-#line 130 "t2parser.y"
+#line 286 "t2parser.y"
     {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
     break;
 
   case 31:
 
 /* Line 1455 of yacc.c  */
-#line 136 "t2parser.y"
-    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
+#line 289 "t2parser.y"
+    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);scope++;;}
     break;
 
   case 32:
 
 /* Line 1455 of yacc.c  */
-#line 139 "t2parser.y"
-    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
+#line 292 "t2parser.y"
+    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);
+        //here we need to remove all the variables declared in this scope
+        // change all of their scope to INT_MAX
+            int i;
+            for(i=count-1; i>=0; i--) {
+                if(symbol_table[i].thisscope == scope && 
+                        strcmp(symbol_table[i].type, "Variable")==0) {
+                    symbol_table[i].thisscope = INT_MAX;
+                    printf("\nERASING %s from symbol table as its CURRENT SCOPE is FINISHED\n", symbol_table[i].id_name);
+                }
+            }
+        scope--;
+    ;}
     break;
 
   case 33:
 
 /* Line 1455 of yacc.c  */
-#line 142 "t2parser.y"
+#line 307 "t2parser.y"
     {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
     break;
 
   case 34:
 
 /* Line 1455 of yacc.c  */
-#line 145 "t2parser.y"
-    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
+#line 313 "t2parser.y"
+    {(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name); 
+        strcpy(exp_type," ");
+    ;}
     break;
 
   case 35:
 
 /* Line 1455 of yacc.c  */
-#line 151 "t2parser.y"
-    { (yyval.nd_obj).nd = mknode(NULL, NULL, "empty"); ;}
+#line 318 "t2parser.y"
+    {add('K');(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
     break;
 
   case 36:
 
 /* Line 1455 of yacc.c  */
-#line 152 "t2parser.y"
+#line 321 "t2parser.y"
+    {add('K');(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
+    break;
+
+  case 37:
+
+/* Line 1455 of yacc.c  */
+#line 324 "t2parser.y"
+    {add('c');(yyval.nd_obj).nd = mknode(NULL, NULL, (yyvsp[(1) - (1)].nd_obj).name);;}
+    break;
+
+  case 38:
+
+/* Line 1455 of yacc.c  */
+#line 330 "t2parser.y"
+    { (yyval.nd_obj).nd = mknode(NULL, NULL, "empty"); ;}
+    break;
+
+  case 39:
+
+/* Line 1455 of yacc.c  */
+#line 331 "t2parser.y"
     { 
         printf("Parser found input-eol\n");
         int num_children = 2;  // Number of children
@@ -1902,10 +2144,10 @@ yyreduce:
     ;}
     break;
 
-  case 37:
+  case 40:
 
 /* Line 1455 of yacc.c  */
-#line 160 "t2parser.y"
+#line 339 "t2parser.y"
     { 
         printf("Parser found eol-input\n");
         int num_children = 2;  // Number of children
@@ -1916,42 +2158,44 @@ yyreduce:
     ;}
     break;
 
-  case 38:
+  case 41:
 
 /* Line 1455 of yacc.c  */
-#line 168 "t2parser.y"
+#line 347 "t2parser.y"
     { 
-        printf("Parser found input-import-id-;\n");
+        //add('H');
+        printf("Parser found input-import-lib-;\n");
         int num_children = 4;  // Number of children
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
         children[0] = (yyvsp[(1) - (4)].nd_obj).nd;
         children[1] = (yyvsp[(2) - (4)].nd_obj).nd;
         children[2] = (yyvsp[(3) - (4)].nd_obj).nd; 
         children[3] = (yyvsp[(4) - (4)].nd_obj).nd;
-        (yyval.nd_obj).nd = mknode(num_children, children, "input-import-id-;");
+        (yyval.nd_obj).nd = mknode(num_children, children, "input-import-lib-;");
     ;}
     break;
 
-  case 39:
+  case 42:
 
 /* Line 1455 of yacc.c  */
-#line 178 "t2parser.y"
+#line 358 "t2parser.y"
     { 
-        printf("Parser found import-id-;-input\n");
+        //add('H');
+        printf("Parser found import-lib-;-input\n");
         int num_children = 4;  // Number of children
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
         children[0] = (yyvsp[(1) - (4)].nd_obj).nd;
         children[1] = (yyvsp[(2) - (4)].nd_obj).nd;
         children[2] = (yyvsp[(3) - (4)].nd_obj).nd; 
         children[3] = (yyvsp[(4) - (4)].nd_obj).nd;
-        (yyval.nd_obj).nd = mknode(num_children, children, "import-id-;-input");
+        (yyval.nd_obj).nd = mknode(num_children, children, "import-lib-;-input");
     ;}
     break;
 
-  case 40:
+  case 43:
 
 /* Line 1455 of yacc.c  */
-#line 188 "t2parser.y"
+#line 369 "t2parser.y"
     { 
         printf("Parser found input-bunch_of_stmts-input\n");
         int num_children = 3;  // Number of children
@@ -1963,90 +2207,140 @@ yyreduce:
     ;}
     break;
 
-  case 41:
-
-/* Line 1455 of yacc.c  */
-#line 197 "t2parser.y"
-    { 
-        printf("Parser found input-functionDec-input\n");
-        int num_children = 3;  // Number of children
-        struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
-        children[0] = (yyvsp[(1) - (3)].nd_obj).nd;
-        children[1] = (yyvsp[(2) - (3)].nd_obj).nd; 
-        children[2] = (yyvsp[(3) - (3)].nd_obj).nd;
-        (yyval.nd_obj).nd = mknode(num_children, children, "input-funDec-input");
-    ;}
-    break;
-
-  case 42:
-
-/* Line 1455 of yacc.c  */
-#line 215 "t2parser.y"
-    {
-                    printf("Parser found int\n");
-                    int num_children = 1;  // Number of children
-                    struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
-                    children[0] = (yyvsp[(1) - (1)].nd_obj).nd;  
-                    (yyval.nd_obj).nd = mknode(num_children, children, "INT");
-                ;}
-    break;
-
-  case 43:
-
-/* Line 1455 of yacc.c  */
-#line 222 "t2parser.y"
-    {
-                    printf("Parser found float\n");
-                    int num_children = 1;  // Number of children
-                    struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
-                    children[0] = (yyvsp[(1) - (1)].nd_obj).nd;  
-                    (yyval.nd_obj).nd = mknode(num_children, children, "FLOAT");
-                ;}
-    break;
-
   case 44:
 
 /* Line 1455 of yacc.c  */
-#line 229 "t2parser.y"
-    {
-                    printf("Parser found character\n");
-                    int num_children = 1;  // Number of children
-                    struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
-                    children[0] = (yyvsp[(1) - (1)].nd_obj).nd;  
-                    (yyval.nd_obj).nd = mknode(num_children, children, "CHAR");
-                ;}
+#line 378 "t2parser.y"
+    {insNumOfLabel[labelsused]=ic_idx; sprintf(icg[ic_idx++], "LABEL L%d:\n", labelsused++);;}
     break;
 
   case 45:
 
 /* Line 1455 of yacc.c  */
-#line 236 "t2parser.y"
-    {
-                    printf("Parser found string\n");
-                    int num_children = 1;  // Number of children
-                    struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
-                    children[0] = (yyvsp[(1) - (1)].nd_obj).nd;  
-                    (yyval.nd_obj).nd = mknode(num_children, children, "STRING");
-                ;}
+#line 378 "t2parser.y"
+    { 
+        //add('F');
+        printf("Parser found input-functionDec-input\n");
+        int num_children = 3;  // Number of children
+        struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
+        children[0] = (yyvsp[(1) - (4)].nd_obj).nd;
+        children[1] = (yyvsp[(3) - (4)].nd_obj).nd; 
+        children[2] = (yyvsp[(4) - (4)].nd_obj).nd;
+        (yyval.nd_obj).nd = mknode(num_children, children, "input-funDec-input");
+    ;}
     break;
 
   case 46:
 
 /* Line 1455 of yacc.c  */
-#line 243 "t2parser.y"
-    {
-                    printf("Parser found identifier\n");
+#line 397 "t2parser.y"
+    {    
+                    if(strcmp(exp_type," ")==0) {
+                        strcpy(exp_type, "sankhya");
+                    }
+                    else if(strcmp(exp_type, "theega")==0) {
+                        sprintf(errors[sem_errors], "Line %d: operation among int and string in expression not allowed\n", countn+1);
+                        sem_errors++;
+                    }
+                    printf("Parser found int\n");
                     int num_children = 1;  // Number of children
                     struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
                     children[0] = (yyvsp[(1) - (1)].nd_obj).nd;  
-                    (yyval.nd_obj).nd = mknode(num_children, children, "ID");
+                    (yyval.nd_obj).nd = mknode(num_children, children, "INT");
+
+                    // if(firstreg == -1){
+                    //     firstreg = registerIndex++;
+                    //     sprintf(icg[ic_idx++], "R%d = %s\n", firstreg, $1.name);
+                    // }
+                    // else{
+                    //     secondreg = registerIndex++;
+                    //     sprintf(icg[ic_idx++], "R%d = %s\n", secondreg, $1.name);
+                    // }
+                    registers[regstackpointer++]=registerIndex;
+                    sprintf(icg[ic_idx++], "MOV R%d , %s\n", (registerIndex++)-1, (yyvsp[(1) - (1)].nd_obj).name);
+
                 ;}
     break;
 
   case 47:
 
 /* Line 1455 of yacc.c  */
-#line 250 "t2parser.y"
+#line 423 "t2parser.y"
+    {
+                    if(strcmp(exp_type," ")==0) {
+                        strcpy(exp_type, "thelu");
+                    }
+                    else if(strcmp(exp_type, "theega")==0) {
+                        sprintf(errors[sem_errors], "Line %d: operation among float and string in expression not allowed\n", countn+1);
+                        sem_errors++;
+                    }
+                    printf("Parser found float\n");
+                    int num_children = 1;  // Number of children
+                    struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
+                    children[0] = (yyvsp[(1) - (1)].nd_obj).nd;  
+                    (yyval.nd_obj).nd = mknode(num_children, children, "FLOAT");
+                    registers[regstackpointer++]=registerIndex;
+                    sprintf(icg[ic_idx++], "MOV R%d , %s\n",( registerIndex++)-1, (yyvsp[(1) - (1)].nd_obj).name);
+                ;}
+    break;
+
+  case 48:
+
+/* Line 1455 of yacc.c  */
+#line 439 "t2parser.y"
+    {
+                    printf("Parser found character\n");
+                    int num_children = 1;  // Number of children
+                    struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
+                    children[0] = (yyvsp[(1) - (1)].nd_obj).nd;  
+                    (yyval.nd_obj).nd = mknode(num_children, children, "CHAR");
+                    registers[regstackpointer++]=registerIndex;
+                    sprintf(icg[ic_idx++], "MOV R%d , %s\n", (registerIndex++)-1, (yyvsp[(1) - (1)].nd_obj).name);
+                ;}
+    break;
+
+  case 49:
+
+/* Line 1455 of yacc.c  */
+#line 448 "t2parser.y"
+    {
+                    if(strcmp(exp_type," ")==0) {
+                        strcpy(exp_type, "theega");
+                    }
+                    else if(strcmp(exp_type, "sankhya")==0 || strcmp(exp_type, "thelu")==0) {
+                        sprintf(errors[sem_errors], "Line %d: operation among string and int/float in expression not allowed\n", countn+1);
+                        sem_errors++;
+                    }
+                    printf("Parser found string\n");
+                    int num_children = 1;  // Number of children
+                    struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
+                    children[0] = (yyvsp[(1) - (1)].nd_obj).nd;  
+                    (yyval.nd_obj).nd = mknode(num_children, children, "STRING");
+                    registers[regstackpointer++]=registerIndex;
+                    sprintf(icg[ic_idx++], "MOV R%d , %s\n", (registerIndex++)-1, (yyvsp[(1) - (1)].nd_obj).name);
+                ;}
+    break;
+
+  case 50:
+
+/* Line 1455 of yacc.c  */
+#line 464 "t2parser.y"
+    {
+                    printf("Parser found identifier\n");
+                    int num_children = 1;  // Number of children
+                    struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
+                    children[0] = (yyvsp[(1) - (1)].nd_obj).nd;  
+                    (yyval.nd_obj).nd = mknode(num_children, children, "ID");
+                    registers[regstackpointer++]=registerIndex;
+                    sprintf(icg[ic_idx++], "MOV R%d , %s\n", (registerIndex++)-1, (yyvsp[(1) - (1)].nd_obj).name);
+                    markVariableAsUsed((yyvsp[(1) - (1)].nd_obj).name);  // optimization stage
+                ;}
+    break;
+
+  case 51:
+
+/* Line 1455 of yacc.c  */
+#line 474 "t2parser.y"
     {
                     printf("Parser found funcCall\n");
                     int num_children = 1;  // Number of children
@@ -2056,10 +2350,10 @@ yyreduce:
                 ;}
     break;
 
-  case 48:
+  case 52:
 
 /* Line 1455 of yacc.c  */
-#line 257 "t2parser.y"
+#line 481 "t2parser.y"
     {
                     printf("Parser found id[exp]\n");
                     int num_children = 4;  // Number of children
@@ -2069,13 +2363,15 @@ yyreduce:
                     children[2] = (yyvsp[(3) - (4)].nd_obj).nd; 
                     children[3] = (yyvsp[(4) - (4)].nd_obj).nd; 
                     (yyval.nd_obj).nd = mknode(num_children, children, "ID[exp]");
+                    //registers[regstackpointer++]=registerIndex;
+                    sprintf(icg[ic_idx++], "MOV R%d , %s+R%d\n", registerIndex , (yyvsp[(1) - (4)].nd_obj).name,registerIndex-1);
                 ;}
     break;
 
-  case 49:
+  case 53:
 
 /* Line 1455 of yacc.c  */
-#line 267 "t2parser.y"
+#line 493 "t2parser.y"
     { 
         printf("Parser found (exp)\n");
         int num_children = 3;  // Number of children
@@ -2092,19 +2388,33 @@ yyreduce:
     ;}
     break;
 
-  case 50:
+  case 54:
 
 /* Line 1455 of yacc.c  */
-#line 281 "t2parser.y"
+#line 531 "t2parser.y"
+    {firstreg = registerIndex-1;registers[registerIndex-1]=firstreg;;}
+    break;
+
+  case 55:
+
+/* Line 1455 of yacc.c  */
+#line 532 "t2parser.y"
+    {secondreg = registerIndex-1;registers[registerIndex-1]=secondreg;;}
+    break;
+
+  case 56:
+
+/* Line 1455 of yacc.c  */
+#line 532 "t2parser.y"
     { 
         printf("Parser found exp-arithmeticOp-exp\n");
         int num_children = 3;  // Number of children
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
         
         // Assigning children nodes
-        children[0] = (yyvsp[(1) - (3)].nd_obj).nd;  // Assuming $1 represents the parse tree node for symbol1
-        children[1] = (yyvsp[(2) - (3)].nd_obj).nd;  // Assuming $2 represents the parse tree node for symbol2
-        children[2] = (yyvsp[(3) - (3)].nd_obj).nd;
+        children[0] = (yyvsp[(1) - (5)].nd_obj).nd;  // Assuming $1 represents the parse tree node for symbol1
+        children[1] = (yyvsp[(3) - (5)].nd_obj).nd;  // Assuming $2 represents the parse tree node for symbol2
+        children[2] = (yyvsp[(4) - (5)].nd_obj).nd;
         // Assign more children if needed
         
         // Create the parse tree node for the production rule
@@ -2112,51 +2422,170 @@ yyreduce:
         
         // Free the memory allocated for the array of children
         //free(children);
+        regstackpointer--;
+        if(((yyvsp[(3) - (5)].nd_obj).name)[0] == '+')
+            sprintf(icg[ic_idx++], "ADD R%d , R%d\n", secondreg , registers[--regstackpointer]-1);
+        else if(((yyvsp[(3) - (5)].nd_obj).name)[0] == '-')
+            sprintf(icg[ic_idx++], "SUB R%d , R%d\n", secondreg-1 , registers[--regstackpointer]-1);
+        else if(((yyvsp[(3) - (5)].nd_obj).name)[0] == '*')
+            sprintf(icg[ic_idx++], "MUL R%d , R%d\n", secondreg , registers[--regstackpointer]-1);
+        else if(((yyvsp[(3) - (5)].nd_obj).name)[0] == '/')
+            sprintf(icg[ic_idx++], "DIV R%d , R%d\n", secondreg , registers[--regstackpointer]-1);
+        else if(((yyvsp[(3) - (5)].nd_obj).name)[0] == '%')
+            sprintf(icg[ic_idx++], "MOD R%d , R%d\n", secondreg , registers[--regstackpointer]-1);
+        else{
+            sprintf(icg[ic_idx++], "R%d = R%d %c R%d\n", secondreg , registers[--regstackpointer]-1, ((yyvsp[(3) - (5)].nd_obj).name)[0],secondreg);
+        }
+
+        // // CONSTANT FOLDING
+        // if(($3.name)[0] == '+')
+        //     sprintf(icg[ic_idx++], "MOV R%d , %d\n", secondreg , registers[--regstackpointer]-1);
+
+        //secondreg = firstreg;
+        //first = registers[regstackpointer];
+      
     ;}
     break;
 
-  case 51:
+  case 57:
 
 /* Line 1455 of yacc.c  */
-#line 298 "t2parser.y"
+#line 571 "t2parser.y"
+    {firstreg = registerIndex-1;;}
+    break;
+
+  case 58:
+
+/* Line 1455 of yacc.c  */
+#line 571 "t2parser.y"
+    {secondreg = registerIndex-1;;}
+    break;
+
+  case 59:
+
+/* Line 1455 of yacc.c  */
+#line 571 "t2parser.y"
     { 
         printf("Parser found exp-logicalOp-exp\n");
         int num_children = 3;  // Number of children
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
-        children[0] = (yyvsp[(1) - (3)].nd_obj).nd;
-        children[1] = (yyvsp[(2) - (3)].nd_obj).nd; 
-        children[2] = (yyvsp[(3) - (3)].nd_obj).nd;
+        children[0] = (yyvsp[(1) - (5)].nd_obj).nd;
+        children[1] = (yyvsp[(3) - (5)].nd_obj).nd; 
+        children[2] = (yyvsp[(4) - (5)].nd_obj).nd;
         (yyval.nd_obj).nd = mknode(num_children, children, "LogicalOp");
+        //sprintf(icg[ic_idx++], "R%d = R%d %s R%d\n", secondreg , firstreg, $3.name, secondreg);
+        if (strcmp((yyvsp[(3) - (5)].nd_obj).name, "mariyu") == 0) {
+            sprintf(icg[ic_idx++], "AND R%d , R%d\n", secondreg , firstreg);
+        }
+        else if (strcmp((yyvsp[(3) - (5)].nd_obj).name, "leda") == 0) {
+            sprintf(icg[ic_idx++], "OR R%d , R%d\n", secondreg , firstreg);
+        }  
+        // else if (strcmp($3.name, "kaadu") == 0) {
+        //     sprintf(icg[ic_idx++], "NOT R%d , R%d\n", secondreg , firstreg);
+        // }  
+        else if (strcmp((yyvsp[(3) - (5)].nd_obj).name, "pratyekam") == 0) {
+            sprintf(icg[ic_idx++], "XOR R%d , R%d\n", secondreg , firstreg);
+        }
+        else{
+            sprintf(icg[ic_idx++], "R%d = R%d %s R%d\n", secondreg , firstreg, (yyvsp[(3) - (5)].nd_obj).name,secondreg);
+        }  
+
+
     ;}
     break;
 
-  case 52:
+  case 60:
 
 /* Line 1455 of yacc.c  */
-#line 307 "t2parser.y"
+#line 598 "t2parser.y"
+    {firstreg = registerIndex-1;;}
+    break;
+
+  case 61:
+
+/* Line 1455 of yacc.c  */
+#line 598 "t2parser.y"
+    {secondreg = registerIndex-1;;}
+    break;
+
+  case 62:
+
+/* Line 1455 of yacc.c  */
+#line 598 "t2parser.y"
+    { 
+        printf("Parser found exp-compOp-exp\n");
+        int num_children = 3;  // Number of children
+        struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
+        children[0] = (yyvsp[(1) - (5)].nd_obj).nd;
+        children[1] = (yyvsp[(3) - (5)].nd_obj).nd; 
+        children[2] = (yyvsp[(4) - (5)].nd_obj).nd;
+        (yyval.nd_obj).nd = mknode(num_children, children, "CompOp");
+        //sprintf(icg[ic_idx++], "R%d = R%d %s R%d\n", secondreg , firstreg, $3.name, secondreg);
+        if (strcmp((yyvsp[(3) - (5)].nd_obj).name, "chinnadi") == 0) {
+            sprintf(icg[ic_idx++], "LT R%d , R%d\n", secondreg , firstreg);
+        }
+        else if (strcmp((yyvsp[(3) - (5)].nd_obj).name, "peddadi") == 0) {
+            sprintf(icg[ic_idx++], "GT R%d , R%d\n", secondreg , firstreg);
+        }  
+        // else if (strcmp($3.name, "kaadu") == 0) {
+        //     sprintf(icg[ic_idx++], "NOT R%d , R%d\n", secondreg , firstreg);
+        // }  
+        else if (strcmp((yyvsp[(3) - (5)].nd_obj).name, "peddadiLedaSamanam") == 0) {
+            sprintf(icg[ic_idx++], "GE R%d , R%d\n", secondreg , firstreg);
+        }  
+        else if (strcmp((yyvsp[(3) - (5)].nd_obj).name, "chinnadiLedaSamanam") == 0) {
+            sprintf(icg[ic_idx++], "LE R%d , R%d\n", secondreg , firstreg);
+        }  
+        else if (strcmp((yyvsp[(3) - (5)].nd_obj).name, "samanam") == 0) {
+            sprintf(icg[ic_idx++], "EQ R%d , R%d\n", secondreg , firstreg);
+        }  
+        else if (strcmp((yyvsp[(3) - (5)].nd_obj).name, "bhinnam") == 0) {
+            sprintf(icg[ic_idx++], "NE R%d , R%d\n", secondreg , firstreg);
+        }  
+        else{
+            sprintf(icg[ic_idx++], "R%d = R%d %s R%d\n", secondreg , firstreg, (yyvsp[(3) - (5)].nd_obj).name,secondreg);
+        }  
+
+
+    ;}
+    break;
+
+  case 63:
+
+/* Line 1455 of yacc.c  */
+#line 634 "t2parser.y"
+    {registers[regstackpointer++]=registerIndex;
+        sprintf(icg[ic_idx++], "MOV R%d , %s + R%d\n", registerIndex , (yyvsp[(1) - (3)].nd_obj).name, registerIndex-1);;}
+    break;
+
+  case 64:
+
+/* Line 1455 of yacc.c  */
+#line 635 "t2parser.y"
     { 
         printf("Parser found id[exp]\n");
         int num_children = 4;  // Number of children
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
-        children[0] = (yyvsp[(1) - (4)].nd_obj).nd;
-        children[1] = (yyvsp[(2) - (4)].nd_obj).nd; 
-        children[2] = (yyvsp[(3) - (4)].nd_obj).nd;
-        children[3] = (yyvsp[(4) - (4)].nd_obj).nd;
+        children[0] = (yyvsp[(1) - (5)].nd_obj).nd;
+        children[1] = (yyvsp[(2) - (5)].nd_obj).nd; 
+        children[2] = (yyvsp[(3) - (5)].nd_obj).nd;
+        children[3] = (yyvsp[(5) - (5)].nd_obj).nd;
         (yyval.nd_obj).nd = mknode(num_children, children, "id[exp]");
+        //sprintf(icg[ic_idx++], "MOV R%d , %s + R%d\n", firstreg , $1.name, firstreg);
     ;}
     break;
 
-  case 53:
+  case 65:
 
 /* Line 1455 of yacc.c  */
-#line 321 "t2parser.y"
+#line 650 "t2parser.y"
     { (yyval.nd_obj).nd = mknode(NULL, NULL, "empty"); ;}
     break;
 
-  case 54:
+  case 66:
 
 /* Line 1455 of yacc.c  */
-#line 322 "t2parser.y"
+#line 651 "t2parser.y"
     { 
         printf("Parser found EOL-bunch\n");
         int num_children = 2;  // Number of children
@@ -2167,10 +2596,10 @@ yyreduce:
     ;}
     break;
 
-  case 55:
+  case 67:
 
 /* Line 1455 of yacc.c  */
-#line 330 "t2parser.y"
+#line 659 "t2parser.y"
     { 
         printf("Parser found bunch-EOL\n");
         int num_children = 2;  // Number of children
@@ -2181,25 +2610,61 @@ yyreduce:
     ;}
     break;
 
-  case 56:
+  case 68:
 
 /* Line 1455 of yacc.c  */
-#line 338 "t2parser.y"
+#line 667 "t2parser.y"
+    {
+            insNumOfLabel[labelsused]=ic_idx; 
+            sprintf(icg[ic_idx++], "LABEL L%d:\n", labelsused++);
+            //lastjumps[lastjumpstackpointer++] = label[stackpointer-2];
+            int index = ic_idx - 1;
+            int count = laddercounts[laddercountstackpointer-1]; // Number of iterations
+
+            for (int i = index; i >= 0 && count > 0; i--) {
+                printf("icg[%d] = %s\n", i, icg[i]);
+                if (strncmp(icg[i], "JUMP ", 5) == 0) { // Check if the prefix matches "JUMP "
+                    printf("...................\n");
+                    char jump_str[20]; // Assuming the number won't exceed 20 digits
+                    sprintf(jump_str, "%d", labelsused-1); // Convert number to string
+                    snprintf(icg[i], 20, "JUMPx L%s\n", jump_str); // Set icg[i] to "JUMP" followed by the number
+                    count--;
+                }
+            }
+            lastjumpstackpointer--;  // forgetting the current ifelseLadder's lastjump and counts
+            laddercountstackpointer--;
+        
+        ;}
+    break;
+
+  case 69:
+
+/* Line 1455 of yacc.c  */
+#line 687 "t2parser.y"
+    {
+
+        ;}
+    break;
+
+  case 70:
+
+/* Line 1455 of yacc.c  */
+#line 689 "t2parser.y"
     { 
         printf("Parser found bunch_of_statement if_else_ladder bunch\n");
         int num_children = 3;  // Number of children
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
-        children[0] = (yyvsp[(1) - (3)].nd_obj).nd;
-        children[1] = (yyvsp[(2) - (3)].nd_obj).nd;
-        children[2] = (yyvsp[(3) - (3)].nd_obj).nd; 
+        children[0] = (yyvsp[(1) - (5)].nd_obj).nd;
+        children[1] = (yyvsp[(2) - (5)].nd_obj).nd;
+        children[2] = (yyvsp[(4) - (5)].nd_obj).nd; 
         (yyval.nd_obj).nd = mknode(num_children, children, "bunch-IfElse-bunch");
     ;}
     break;
 
-  case 57:
+  case 71:
 
 /* Line 1455 of yacc.c  */
-#line 347 "t2parser.y"
+#line 698 "t2parser.y"
     { 
         printf("Parser found bunch_of_statement-inputscan-bunch\n");
         int num_children = 7;  // Number of children
@@ -2215,10 +2680,10 @@ yyreduce:
     ;}
     break;
 
-  case 58:
+  case 72:
 
 /* Line 1455 of yacc.c  */
-#line 360 "t2parser.y"
+#line 711 "t2parser.y"
     { 
         printf("Parser found bunch_of_statement while_loop bunch\n");
         int num_children = 3;  // Number of children
@@ -2230,26 +2695,10 @@ yyreduce:
     ;}
     break;
 
-  case 59:
+  case 73:
 
 /* Line 1455 of yacc.c  */
-#line 369 "t2parser.y"
-    { 
-        printf("Parser found bunch-equation-finish\n");
-        int num_children = 4;  // Number of children
-        struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
-        children[0] = (yyvsp[(1) - (4)].nd_obj).nd;
-        children[1] = (yyvsp[(2) - (4)].nd_obj).nd; 
-        children[2] = (yyvsp[(3) - (4)].nd_obj).nd;
-        children[3] = (yyvsp[(4) - (4)].nd_obj).nd;
-        (yyval.nd_obj).nd = mknode(num_children, children, "bunch-equation-;-bunch");
-    ;}
-    break;
-
-  case 60:
-
-/* Line 1455 of yacc.c  */
-#line 379 "t2parser.y"
+#line 720 "t2parser.y"
     { 
         printf("Parser found bunch-printStmt-finish\n");
         int num_children = 4;  // Number of children
@@ -2262,10 +2711,10 @@ yyreduce:
     ;}
     break;
 
-  case 61:
+  case 74:
 
 /* Line 1455 of yacc.c  */
-#line 389 "t2parser.y"
+#line 730 "t2parser.y"
     { 
         printf("Parser found bunch-varDeclare-finish\n");
         int num_children = 4;  // Number of children
@@ -2278,10 +2727,10 @@ yyreduce:
     ;}
     break;
 
-  case 62:
+  case 75:
 
 /* Line 1455 of yacc.c  */
-#line 399 "t2parser.y"
+#line 740 "t2parser.y"
     {
         printf("parser found bunch {bunch}\n");
         int num_children = 5;  // Number of children
@@ -2295,10 +2744,10 @@ yyreduce:
     ;}
     break;
 
-  case 63:
+  case 76:
 
 /* Line 1455 of yacc.c  */
-#line 410 "t2parser.y"
+#line 751 "t2parser.y"
     { 
         printf("Parser found bunch-functionCall-;\n");
         int num_children = 4;  // Number of children
@@ -2311,10 +2760,26 @@ yyreduce:
     ;}
     break;
 
-  case 64:
+  case 77:
 
 /* Line 1455 of yacc.c  */
-#line 420 "t2parser.y"
+#line 761 "t2parser.y"
+    { 
+        printf("Parser found bunch-equation-finish\n");
+        int num_children = 4;  // Number of children
+        struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
+        children[0] = (yyvsp[(1) - (4)].nd_obj).nd;
+        children[1] = (yyvsp[(2) - (4)].nd_obj).nd; 
+        children[2] = (yyvsp[(3) - (4)].nd_obj).nd;
+        children[3] = (yyvsp[(4) - (4)].nd_obj).nd;
+        (yyval.nd_obj).nd = mknode(num_children, children, "bunch-equation-;-bunch");
+    ;}
+    break;
+
+  case 78:
+
+/* Line 1455 of yacc.c  */
+#line 771 "t2parser.y"
     {
         printf("PARSER ERROR: syntax error \n");
         int num_children = 0;  // Number of children
@@ -2323,12 +2788,12 @@ yyreduce:
 ;}
     break;
 
-  case 65:
+  case 79:
 
 /* Line 1455 of yacc.c  */
-#line 428 "t2parser.y"
+#line 779 "t2parser.y"
     { 
-        printf("Parser found exp\n");
+        printf("Parser found exp as condition\n");
         int num_children = 1;  // Number of children
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
         children[0] = (yyvsp[(1) - (1)].nd_obj).nd;
@@ -2336,66 +2801,136 @@ yyreduce:
     ;}
     break;
 
-  case 66:
+  case 80:
 
 /* Line 1455 of yacc.c  */
-#line 435 "t2parser.y"
+#line 786 "t2parser.y"
+    {firstreg = registerIndex-1;;}
+    break;
+
+  case 81:
+
+/* Line 1455 of yacc.c  */
+#line 786 "t2parser.y"
+    {secondreg = registerIndex-1;;}
+    break;
+
+  case 82:
+
+/* Line 1455 of yacc.c  */
+#line 786 "t2parser.y"
     { 
         printf("Parser found exp-compareOp-exp\n");
         int num_children = 3;  // Number of children
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
-        children[0] = (yyvsp[(1) - (3)].nd_obj).nd;
-        children[1] = (yyvsp[(2) - (3)].nd_obj).nd; 
-        children[2] = (yyvsp[(3) - (3)].nd_obj).nd;
+        children[0] = (yyvsp[(1) - (5)].nd_obj).nd;
+        children[1] = (yyvsp[(3) - (5)].nd_obj).nd; 
+        children[2] = (yyvsp[(4) - (5)].nd_obj).nd;
         (yyval.nd_obj).nd = mknode(num_children, children, "condition");
+        
+        //sprintf(icg[ic_idx++], "R%d = R%d %s R%d\n", secondreg , firstreg, $3.name, secondreg);
+        if (strcmp((yyvsp[(3) - (5)].nd_obj).name, "chinnadi") == 0) {
+            sprintf(icg[ic_idx++], "LT R%d R%d R%d\n", registerIndex++ , firstreg, secondreg);
+        }
+        else if (strcmp((yyvsp[(3) - (5)].nd_obj).name, "peddadi") == 0) {
+            sprintf(icg[ic_idx++], "GT R%d R%d R%d\n", registerIndex++ , firstreg, secondreg);
+        }
+        else if (strcmp((yyvsp[(3) - (5)].nd_obj).name, "chinnadiLedaSamanam") == 0) {
+            sprintf(icg[ic_idx++], "LTE R%d R%d R%d\n", registerIndex++ , firstreg, secondreg);
+        }
+        else if (strcmp((yyvsp[(3) - (5)].nd_obj).name, "peddadiLedaSamanam") == 0) {
+            sprintf(icg[ic_idx++], "GTE R%d R%d R%d\n", registerIndex++ , firstreg, secondreg);
+        }
+        else if (strcmp((yyvsp[(3) - (5)].nd_obj).name, "samanam") == 0) {
+            sprintf(icg[ic_idx++], "EQ R%d R%d R%d\n", registerIndex++ , firstreg, secondreg);
+        }
+        else{
+            sprintf(icg[ic_idx++], "R%d = R%d %s R%d\n", secondreg , firstreg, (yyvsp[(3) - (5)].nd_obj).name, secondreg);
+            registerIndex++;   // is this needed?
+        }
+         
     ;}
     break;
 
-  case 67:
+  case 83:
 
 /* Line 1455 of yacc.c  */
-#line 444 "t2parser.y"
+#line 817 "t2parser.y"
+    {firstreg = registerIndex-1;;}
+    break;
+
+  case 84:
+
+/* Line 1455 of yacc.c  */
+#line 817 "t2parser.y"
+    {secondreg = registerIndex-1;;}
+    break;
+
+  case 85:
+
+/* Line 1455 of yacc.c  */
+#line 817 "t2parser.y"
     { 
         printf("Parser found exp-logicalOp-exp\n");
         int num_children = 3;  // Number of children
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
-        children[0] = (yyvsp[(1) - (3)].nd_obj).nd;
-        children[1] = (yyvsp[(2) - (3)].nd_obj).nd; 
-        children[2] = (yyvsp[(3) - (3)].nd_obj).nd;
+        children[0] = (yyvsp[(1) - (5)].nd_obj).nd;
+        children[1] = (yyvsp[(3) - (5)].nd_obj).nd; 
+        children[2] = (yyvsp[(4) - (5)].nd_obj).nd;
         (yyval.nd_obj).nd = mknode(num_children, children, "condition");
+        sprintf(icg[ic_idx++], "R%d = R%d %s R%d\n", secondreg , firstreg, (yyvsp[(3) - (5)].nd_obj).name, secondreg);
     ;}
     break;
 
-  case 68:
+  case 86:
 
 /* Line 1455 of yacc.c  */
-#line 455 "t2parser.y"
+#line 829 "t2parser.y"
+    {
+        sprintf(icg[ic_idx++], "if NOT (R%d) GOTO L%d\n",registerIndex-1,labelsused);isleader[insNumOfLabel[labelsused]]=1;isleader[ic_idx]=1; label[stackpointer++]=labelsused++;;}
+    break;
+
+  case 87:
+
+/* Line 1455 of yacc.c  */
+#line 830 "t2parser.y"
+    {sprintf(icg[ic_idx++], "JUMP L%d\n",label[stackpointer-1]);;}
+    break;
+
+  case 88:
+
+/* Line 1455 of yacc.c  */
+#line 830 "t2parser.y"
     { 
         printf("Parser found if(cond){bunch}\n");
         int num_children = 7;  // Number of children
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
-        children[0] = (yyvsp[(1) - (7)].nd_obj).nd;
-        children[1] = (yyvsp[(2) - (7)].nd_obj).nd;
-        children[2] = (yyvsp[(3) - (7)].nd_obj).nd; 
-        children[3] = (yyvsp[(4) - (7)].nd_obj).nd;
-        children[4] = (yyvsp[(5) - (7)].nd_obj).nd;
-        children[5] = (yyvsp[(6) - (7)].nd_obj).nd;
-        children[6] = (yyvsp[(7) - (7)].nd_obj).nd;
+        children[0] = (yyvsp[(1) - (9)].nd_obj).nd;
+        children[1] = (yyvsp[(2) - (9)].nd_obj).nd;
+        children[2] = (yyvsp[(3) - (9)].nd_obj).nd; 
+        children[3] = (yyvsp[(5) - (9)].nd_obj).nd;
+        children[4] = (yyvsp[(6) - (9)].nd_obj).nd;
+        children[5] = (yyvsp[(7) - (9)].nd_obj).nd;
+        children[6] = (yyvsp[(9) - (9)].nd_obj).nd;
         (yyval.nd_obj).nd = mknode(num_children, children, "if(cond){bunch}");
+        insNumOfLabel[label[stackpointer-1]]=ic_idx; 
+        sprintf(icg[ic_idx++], "LABEL L%d:\n", label[--stackpointer]);
+        laddercounts[laddercountstackpointer++]=1;
+
     ;}
     break;
 
-  case 69:
+  case 89:
 
 /* Line 1455 of yacc.c  */
-#line 470 "t2parser.y"
+#line 849 "t2parser.y"
     { (yyval.nd_obj).nd = mknode(NULL, NULL, "empty"); ;}
     break;
 
-  case 70:
+  case 90:
 
 /* Line 1455 of yacc.c  */
-#line 471 "t2parser.y"
+#line 850 "t2parser.y"
     { 
         printf("Parser found eol elif_repeat\n");
         int num_children = 2;  // Number of children
@@ -2406,38 +2941,61 @@ yyreduce:
     ;}
     break;
 
-  case 71:
+  case 91:
 
 /* Line 1455 of yacc.c  */
-#line 479 "t2parser.y"
+#line 859 "t2parser.y"
+    {sprintf(icg[ic_idx++], "if NOT (R%d) GOTO L%d\n",registerIndex-1,labelsused);isleader[insNumOfLabel[labelsused]]=1;isleader[ic_idx]=1;label[stackpointer++]=labelsused++;;}
+    break;
+
+  case 92:
+
+/* Line 1455 of yacc.c  */
+#line 861 "t2parser.y"
+    {sprintf(icg[ic_idx++], "JUMP L%d\n",label[stackpointer-1]);;}
+    break;
+
+  case 93:
+
+/* Line 1455 of yacc.c  */
+#line 862 "t2parser.y"
+    {insNumOfLabel[label[stackpointer-1]]=ic_idx;  sprintf(icg[ic_idx++], "LABEL L%d:\n", label[--stackpointer]);;}
+    break;
+
+  case 94:
+
+/* Line 1455 of yacc.c  */
+#line 862 "t2parser.y"
     { 
         printf("Parser found elif(cond){bunch}\n");
         int num_children = 9;  // Number of children
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
-        children[0] = (yyvsp[(1) - (9)].nd_obj).nd;
-        children[1] = (yyvsp[(2) - (9)].nd_obj).nd;
-        children[2] = (yyvsp[(3) - (9)].nd_obj).nd; 
-        children[3] = (yyvsp[(4) - (9)].nd_obj).nd;
-        children[4] = (yyvsp[(5) - (9)].nd_obj).nd;
-        children[5] = (yyvsp[(6) - (9)].nd_obj).nd;
-        children[6] = (yyvsp[(7) - (9)].nd_obj).nd;
-        children[7] = (yyvsp[(8) - (9)].nd_obj).nd;
-        children[8] = (yyvsp[(9) - (9)].nd_obj).nd;
+        children[0] = (yyvsp[(1) - (12)].nd_obj).nd;
+        children[1] = (yyvsp[(2) - (12)].nd_obj).nd;
+        children[2] = (yyvsp[(3) - (12)].nd_obj).nd; 
+        children[3] = (yyvsp[(4) - (12)].nd_obj).nd;
+        children[4] = (yyvsp[(6) - (12)].nd_obj).nd;
+        children[5] = (yyvsp[(7) - (12)].nd_obj).nd;
+        children[6] = (yyvsp[(8) - (12)].nd_obj).nd;
+        children[7] = (yyvsp[(10) - (12)].nd_obj).nd;
+        children[8] = (yyvsp[(12) - (12)].nd_obj).nd;
         (yyval.nd_obj).nd = mknode(num_children, children, "elif(cond){bunch}");
+        laddercounts[laddercountstackpointer-1]++;
+       
     ;}
     break;
 
-  case 72:
+  case 95:
 
 /* Line 1455 of yacc.c  */
-#line 496 "t2parser.y"
+#line 881 "t2parser.y"
     { (yyval.nd_obj).nd = mknode(NULL, NULL, "empty"); ;}
     break;
 
-  case 73:
+  case 96:
 
 /* Line 1455 of yacc.c  */
-#line 497 "t2parser.y"
+#line 882 "t2parser.y"
     { 
         printf("Parser found EOL-else\n");
         int num_children = 2;  // Number of children
@@ -2448,10 +3006,10 @@ yyreduce:
     ;}
     break;
 
-  case 74:
+  case 97:
 
 /* Line 1455 of yacc.c  */
-#line 505 "t2parser.y"
+#line 890 "t2parser.y"
     { 
         printf("Parser found else{bunch}\n");
         int num_children = 4;  // Number of children
@@ -2464,89 +3022,176 @@ yyreduce:
     ;}
     break;
 
-  case 75:
+  case 98:
 
 /* Line 1455 of yacc.c  */
-#line 517 "t2parser.y"
+#line 903 "t2parser.y"
+    {
+             lastjumps[lastjumpstackpointer++] = label[stackpointer-1];
+
+        ;}
+    break;
+
+  case 99:
+
+/* Line 1455 of yacc.c  */
+#line 907 "t2parser.y"
     { 
         printf("Parser found ifElseLadder\n");
         int num_children = 3;  // Number of children
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
-        children[0] = (yyvsp[(1) - (3)].nd_obj).nd;
-        children[1] = (yyvsp[(2) - (3)].nd_obj).nd;
-        children[2] = (yyvsp[(3) - (3)].nd_obj).nd; 
+        children[0] = (yyvsp[(1) - (4)].nd_obj).nd;
+        children[1] = (yyvsp[(2) - (4)].nd_obj).nd;
+        children[2] = (yyvsp[(4) - (4)].nd_obj).nd; 
         (yyval.nd_obj).nd = mknode(num_children, children, "ifElseLadder");
+        // lastjumpstackpointer--;  // forgetting the current ifelseLadder's lastjump and counts
+        // laddercountstackpointer--;
     ;}
     break;
 
-  case 76:
+  case 100:
 
 /* Line 1455 of yacc.c  */
-#line 526 "t2parser.y"
+#line 919 "t2parser.y"
+    {
+             lastjumps[lastjumpstackpointer++] = label[stackpointer-1];
+            // int index = ic_idx - 1;
+            // int count = laddercounts[laddercountstackpointer-1]; // Number of iterations
+
+            // for (int i = index; i >= 0 && count > 0; i--) {
+            //     if (strncmp(icg[i], "JUMP ", 5) == 0) { // Check if the prefix matches "JUMP "
+            //         char jump_str[20]; // Assuming the number won't exceed 20 digits
+            //         sprintf(jump_str, "%d", lastjumps[lastjumpstackpointer-1]); // Convert number to string
+            //         snprintf(icg[i], 20, "JUMPx L%s\n", jump_str); // Set icg[i] to "JUMP" followed by the number
+            //         count--;
+            //     }
+            // }
+
+        ;}
+    break;
+
+  case 101:
+
+/* Line 1455 of yacc.c  */
+#line 934 "t2parser.y"
     {    // without the else statement
         printf("Parser found ifElseLadder\n");
         int num_children = 2;  // Number of children
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
-        children[0] = (yyvsp[(1) - (2)].nd_obj).nd;
-        children[1] = (yyvsp[(2) - (2)].nd_obj).nd;
+        children[0] = (yyvsp[(1) - (3)].nd_obj).nd;
+        children[1] = (yyvsp[(2) - (3)].nd_obj).nd;
         (yyval.nd_obj).nd = mknode(num_children, children, "ifElseLadder");
     ;}
     break;
 
-  case 77:
+  case 102:
 
 /* Line 1455 of yacc.c  */
-#line 536 "t2parser.y"
+#line 944 "t2parser.y"
+    { looplabel[looplabelstackpointer++] = labelsused; insNumOfLabel[labelsused]=ic_idx;  sprintf(icg[ic_idx++], "LABEL L%d:\n", labelsused++);
+        gotolabel[gotolabelstackpointer++]=labelsused;  sprintf(icg[ic_idx++], "if NOT (R%d) GOTO L%d\n",registerIndex-1,labelsused++);isleader[insNumOfLabel[labelsused-1]]=1;isleader[ic_idx]=1;
+    ;}
+    break;
+
+  case 103:
+
+/* Line 1455 of yacc.c  */
+#line 946 "t2parser.y"
+    { sprintf(icg[ic_idx++], "JUMPtoLOOP L%d\n",looplabel[--looplabelstackpointer]);
+    ;}
+    break;
+
+  case 104:
+
+/* Line 1455 of yacc.c  */
+#line 947 "t2parser.y"
+    {insNumOfLabel[gotolabel[gotolabelstackpointer-1]]=ic_idx;  sprintf(icg[ic_idx++], "LABEL L%d:\n", gotolabel[--gotolabelstackpointer]);;}
+    break;
+
+  case 105:
+
+/* Line 1455 of yacc.c  */
+#line 947 "t2parser.y"
     { 
         printf("Parser found while(cond){bunch}\n");
         int num_children = 7;  // Number of children
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
-        children[0] = (yyvsp[(1) - (7)].nd_obj).nd;
-        children[1] = (yyvsp[(2) - (7)].nd_obj).nd;
-        children[2] = (yyvsp[(3) - (7)].nd_obj).nd; 
-        children[3] = (yyvsp[(4) - (7)].nd_obj).nd;
-        children[4] = (yyvsp[(5) - (7)].nd_obj).nd;
-        children[5] = (yyvsp[(6) - (7)].nd_obj).nd;
-        children[6] = (yyvsp[(7) - (7)].nd_obj).nd;
+        children[0] = (yyvsp[(1) - (10)].nd_obj).nd;
+        children[1] = (yyvsp[(2) - (10)].nd_obj).nd;
+        children[2] = (yyvsp[(3) - (10)].nd_obj).nd; 
+        children[3] = (yyvsp[(5) - (10)].nd_obj).nd;
+        children[4] = (yyvsp[(6) - (10)].nd_obj).nd;
+        children[5] = (yyvsp[(7) - (10)].nd_obj).nd;
+        children[6] = (yyvsp[(9) - (10)].nd_obj).nd;
         (yyval.nd_obj).nd = mknode(num_children, children, "while(cond){bunch}");
     ;}
     break;
 
-  case 78:
+  case 106:
 
 /* Line 1455 of yacc.c  */
-#line 551 "t2parser.y"
-    { 
+#line 962 "t2parser.y"
+    {rangestart = ic_idx;;}
+    break;
+
+  case 107:
+
+/* Line 1455 of yacc.c  */
+#line 962 "t2parser.y"
+    {
+        //add('V');   // this is taking ';' as a variable
         printf("Parser found datatypeId=exp\n");
         int num_children = 4;  // Number of children
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
-        children[0] = (yyvsp[(1) - (4)].nd_obj).nd;
-        children[1] = (yyvsp[(2) - (4)].nd_obj).nd;
-        children[2] = (yyvsp[(3) - (4)].nd_obj).nd; 
-        children[3] = (yyvsp[(4) - (4)].nd_obj).nd;
+        children[0] = (yyvsp[(1) - (5)].nd_obj).nd;
+        children[1] = (yyvsp[(2) - (5)].nd_obj).nd;
+        children[2] = (yyvsp[(3) - (5)].nd_obj).nd; 
+        children[3] = (yyvsp[(5) - (5)].nd_obj).nd;
         (yyval.nd_obj).nd = mknode(num_children, children, "datatypeId=exp");
+        if(strcmp(exp_type,(yyvsp[(1) - (5)].nd_obj).name)!=0 && strcmp(exp_type, " ")!=0){
+            sprintf("$1name=%s and exp_type=%s\n", (yyvsp[(1) - (5)].nd_obj).name,exp_type);
+            sprintf(errors[sem_errors], "Line %d: Data type casting not allowed in declaration\n", countn);
+            sem_errors++;
+        }
+        rangeend = ic_idx;
+        printf("QQQQQQQQQQQQQQQQQQQQQ rangestart=%d rangeend=%d\n",rangestart,rangeend);
+        int idIndexinSymbolTable = findIdentifierIndex((yyvsp[(2) - (5)].nd_obj).name);
+        symbol_table[idIndexinSymbolTable].range[symbol_table[idIndexinSymbolTable].range_count][0] = rangestart;
+        symbol_table[idIndexinSymbolTable].range[symbol_table[idIndexinSymbolTable].range_count++][1] = rangeend;  //stack counter is increased
+        if(performedConstantFolding) registerIndex++;
+            sprintf(icg[ic_idx++], "MOVe %s , R%d\n", (yyvsp[(2) - (5)].nd_obj).name, registerIndex-1);
+        performedConstantFolding=0;
     ;}
     break;
 
-  case 79:
+  case 108:
 
 /* Line 1455 of yacc.c  */
-#line 561 "t2parser.y"
-    { 
+#line 986 "t2parser.y"
+    {
+        
         printf("Parser found datatype Id\n");
         int num_children = 2;  // Number of children
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
         children[0] = (yyvsp[(1) - (2)].nd_obj).nd;
         children[1] = (yyvsp[(2) - (2)].nd_obj).nd;
         (yyval.nd_obj).nd = mknode(num_children, children, "datatypeId");
+
+        //// not needed here
+        // rangestart = ic_idx;
+        // rangeend = ic_idx;
+        // int idIndexinSymbolTable = findIdentifierIndex($2.name);
+        // symbol_table[idIndexinSymbolTable].range[symbol_table[idIndexinSymbolTable].range_count][0] = rangestart;
+        // symbol_table[idIndexinSymbolTable].range[symbol_table[idIndexinSymbolTable].range_count++][1] = rangeend;  //stack counter is increased
     ;}
     break;
 
-  case 80:
+  case 109:
 
 /* Line 1455 of yacc.c  */
-#line 569 "t2parser.y"
-    { 
+#line 1002 "t2parser.y"
+    {
+        
         printf("Parser found datatype Id\n");
         int num_children = 5;  // Number of children
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
@@ -2559,19 +3204,20 @@ yyreduce:
     ;}
     break;
 
-  case 81:
+  case 110:
 
 /* Line 1455 of yacc.c  */
-#line 583 "t2parser.y"
+#line 1017 "t2parser.y"
     { (yyval.nd_obj).nd = mknode(NULL, NULL, "empty"); ;}
     break;
 
-  case 82:
+  case 111:
 
 /* Line 1455 of yacc.c  */
-#line 584 "t2parser.y"
+#line 1018 "t2parser.y"
     { 
         printf("Parser found paramRepDatatypeIdComma\n");
+        curr_num_params++;
         int num_children = 4;  // Number of children
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
         children[0] = (yyvsp[(1) - (4)].nd_obj).nd;
@@ -2582,66 +3228,101 @@ yyreduce:
     ;}
     break;
 
-  case 83:
+  case 112:
 
 /* Line 1455 of yacc.c  */
-#line 596 "t2parser.y"
+#line 1031 "t2parser.y"
     { (yyval.nd_obj).nd = mknode(NULL, NULL, "empty"); ;}
     break;
 
-  case 84:
+  case 113:
 
 /* Line 1455 of yacc.c  */
-#line 597 "t2parser.y"
+#line 1032 "t2parser.y"
+    {scope++;;}
+    break;
+
+  case 114:
+
+/* Line 1455 of yacc.c  */
+#line 1032 "t2parser.y"
+    {scope--;;}
+    break;
+
+  case 115:
+
+/* Line 1455 of yacc.c  */
+#line 1032 "t2parser.y"
     { 
         printf("Parser found parameters_line\n");
+        curr_num_params++;
         int num_children = 3;  // Number of children
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
-        children[0] = (yyvsp[(1) - (3)].nd_obj).nd;
-        children[1] = (yyvsp[(2) - (3)].nd_obj).nd;
-        children[2] = (yyvsp[(3) - (3)].nd_obj).nd; 
+        children[0] = (yyvsp[(2) - (5)].nd_obj).nd;
+        children[1] = (yyvsp[(3) - (5)].nd_obj).nd;
+        children[2] = (yyvsp[(4) - (5)].nd_obj).nd; 
         (yyval.nd_obj).nd = mknode(num_children, children, "paramLine");
     ;}
     break;
 
-  case 85:
+  case 116:
 
 /* Line 1455 of yacc.c  */
-#line 608 "t2parser.y"
+#line 1044 "t2parser.y"
     { (yyval.nd_obj).nd = mknode(NULL, NULL, "empty"); ;}
     break;
 
-  case 86:
+  case 117:
 
 /* Line 1455 of yacc.c  */
-#line 609 "t2parser.y"
+#line 1045 "t2parser.y"
     { 
+        curr_num_args++;
         printf("Parser found lastparam\n");
         int num_children = 1;  // Number of children
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
         children[0] = (yyvsp[(1) - (1)].nd_obj).nd;
         (yyval.nd_obj).nd = mknode(num_children, children, "paramEnd");
+        sprintf(icg[ic_idx++], "PARAM %s\n", (yyvsp[(1) - (1)].nd_obj).name);
     ;}
     break;
 
-  case 87:
+  case 118:
 
 /* Line 1455 of yacc.c  */
-#line 616 "t2parser.y"
+#line 1054 "t2parser.y"
     { 
+        curr_num_args++;
         printf("Parser found lastparam\n");
         int num_children = 1;  // Number of children
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
         children[0] = (yyvsp[(1) - (1)].nd_obj).nd;
         (yyval.nd_obj).nd = mknode(num_children, children, "paramEnd");
+        sprintf(icg[ic_idx++], "PARAM %s\n", (yyvsp[(1) - (1)].nd_obj).name);
     ;}
     break;
 
-  case 88:
+  case 119:
 
 /* Line 1455 of yacc.c  */
-#line 623 "t2parser.y"
+#line 1063 "t2parser.y"
     { 
+        curr_num_args++;
+        printf("Parser found lastparam\n");
+        int num_children = 1;  // Number of children
+        struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
+        children[0] = (yyvsp[(1) - (1)].nd_obj).nd;
+        (yyval.nd_obj).nd = mknode(num_children, children, "paramEnd");
+        sprintf(icg[ic_idx++], "PARAM R%d\n", registers[regstackpointer-1]+1);
+    ;}
+    break;
+
+  case 120:
+
+/* Line 1455 of yacc.c  */
+#line 1072 "t2parser.y"
+    { 
+        curr_num_args++;
         printf("Parser found id-comma-prep\n");
         int num_children = 3;  // Number of children
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
@@ -2649,28 +3330,14 @@ yyreduce:
         children[1] = (yyvsp[(2) - (3)].nd_obj).nd;
         children[2] = (yyvsp[(3) - (3)].nd_obj).nd; 
         (yyval.nd_obj).nd = mknode(num_children, children, "paramRep");
+        sprintf(icg[ic_idx++], "PARAM %s\n", (yyvsp[(1) - (3)].nd_obj).name);
     ;}
     break;
 
-  case 89:
+  case 121:
 
 /* Line 1455 of yacc.c  */
-#line 632 "t2parser.y"
-    { 
-        printf("Parser found const-comma-prep\n");
-        int num_children = 3;  // Number of children
-        struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
-        children[0] = (yyvsp[(1) - (3)].nd_obj).nd;
-        children[1] = (yyvsp[(2) - (3)].nd_obj).nd;
-        children[2] = (yyvsp[(3) - (3)].nd_obj).nd; 
-        (yyval.nd_obj).nd = mknode(num_children, children, "paramRep");
-    ;}
-    break;
-
-  case 90:
-
-/* Line 1455 of yacc.c  */
-#line 643 "t2parser.y"
+#line 1085 "t2parser.y"
     {
         printf("Parser found idLine\n");
         int num_children = 1;  // Number of children
@@ -2680,43 +3347,79 @@ yyreduce:
     ;}
     break;
 
-  case 91:
+  case 122:
 
 /* Line 1455 of yacc.c  */
-#line 652 "t2parser.y"
+#line 1094 "t2parser.y"
+    { strcpy(exp_type," "); ;}
+    break;
+
+  case 123:
+
+/* Line 1455 of yacc.c  */
+#line 1094 "t2parser.y"
+    {rangestart = ic_idx;;}
+    break;
+
+  case 124:
+
+/* Line 1455 of yacc.c  */
+#line 1094 "t2parser.y"
     { 
         printf("Parser found equation\n");
         int num_children = 3;  // Number of children
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
-        children[0] = (yyvsp[(1) - (3)].nd_obj).nd;
-        children[1] = (yyvsp[(2) - (3)].nd_obj).nd;
-        children[2] = (yyvsp[(3) - (3)].nd_obj).nd; 
+        children[0] = (yyvsp[(1) - (5)].nd_obj).nd;
+        children[1] = (yyvsp[(2) - (5)].nd_obj).nd;
+        children[2] = (yyvsp[(5) - (5)].nd_obj).nd; 
         (yyval.nd_obj).nd = mknode(num_children, children, "id=exp");
+        //check if identifier type and exp_type mismatch -> if yes then typecast is happening
+        printf("type of identifier: %s XXXXXXXXXXXXXXXXX exp_type=%s\n\n", get_type((yyvsp[(1) - (5)].nd_obj).name),exp_type);
+        if(strcmp(get_datatype((yyvsp[(1) - (5)].nd_obj).name) , exp_type) && strcmp(exp_type, " ")){
+            sprintf(errors[sem_errors], "Line %d: Data type casting not allowed in equation\n", countn);
+            sem_errors++;
+        }
+        // a = exp   ---> t1=exp, a=t1
+        rangeend = ic_idx;
+        printf("ZZZZZZZZZZ      rangestart=%d rangeend=%d\n",rangestart,rangeend);
+        int idIndexinSymbolTable = findIdentifierIndex((yyvsp[(1) - (5)].nd_obj).name);
+        symbol_table[idIndexinSymbolTable].range[symbol_table[idIndexinSymbolTable].range_count][0] = rangestart;
+        symbol_table[idIndexinSymbolTable].range[symbol_table[idIndexinSymbolTable].range_count++][1] = rangeend;  //stack counter is increased
+
+        sprintf(icg[ic_idx++], "%s = R%d\n", (yyvsp[(1) - (5)].nd_obj).name, registerIndex-1);
     ;}
     break;
 
-  case 92:
+  case 125:
 
 /* Line 1455 of yacc.c  */
-#line 661 "t2parser.y"
+#line 1117 "t2parser.y"
+    {thirdreg = registerIndex-1;;}
+    break;
+
+  case 126:
+
+/* Line 1455 of yacc.c  */
+#line 1117 "t2parser.y"
     { 
         printf("Parser found id[exp]=exp\n");
         int num_children = 6;  // Number of children
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
-        children[0] = (yyvsp[(1) - (6)].nd_obj).nd;
-        children[1] = (yyvsp[(2) - (6)].nd_obj).nd;
-        children[2] = (yyvsp[(3) - (6)].nd_obj).nd; 
-        children[3] = (yyvsp[(4) - (6)].nd_obj).nd;
-        children[4] = (yyvsp[(5) - (6)].nd_obj).nd;
-        children[5] = (yyvsp[(6) - (6)].nd_obj).nd;
+        children[0] = (yyvsp[(1) - (7)].nd_obj).nd;
+        children[1] = (yyvsp[(2) - (7)].nd_obj).nd;
+        children[2] = (yyvsp[(3) - (7)].nd_obj).nd; 
+        children[3] = (yyvsp[(5) - (7)].nd_obj).nd;
+        children[4] = (yyvsp[(6) - (7)].nd_obj).nd;
+        children[5] = (yyvsp[(7) - (7)].nd_obj).nd;
         (yyval.nd_obj).nd = mknode(num_children, children, "id[exp]=exp");
+        sprintf(icg[ic_idx++], "MOV %s+R%d , R%d\n", (yyvsp[(1) - (7)].nd_obj).name,thirdreg ,registerIndex-1);
     ;}
     break;
 
-  case 93:
+  case 127:
 
 /* Line 1455 of yacc.c  */
-#line 675 "t2parser.y"
+#line 1132 "t2parser.y"
     { 
         printf("Parser found funContentEOL\n");
         int num_children = 2;  // Number of children
@@ -2727,23 +3430,52 @@ yyreduce:
     ;}
     break;
 
-  case 94:
+  case 128:
 
 /* Line 1455 of yacc.c  */
-#line 683 "t2parser.y"
+#line 1140 "t2parser.y"
     { 
-        printf("Parser found bunch_function_content\n");
-        int num_children = 1;  // Number of children
+        printf("Parser found EOL-funContent\n");
+        int num_children = 2;  // Number of children
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
-        children[0] = (yyvsp[(1) - (1)].nd_obj).nd;
-        (yyval.nd_obj).nd = mknode(num_children, children, "content-bunch");
+        children[0] = (yyvsp[(1) - (2)].nd_obj).nd;
+        children[1] = (yyvsp[(2) - (2)].nd_obj).nd;
+        (yyval.nd_obj).nd = mknode(num_children, children, "EOL-funContent");
     ;}
     break;
 
-  case 95:
+  case 129:
 
 /* Line 1455 of yacc.c  */
-#line 690 "t2parser.y"
+#line 1148 "t2parser.y"
+    { 
+        printf("Parser found bunch_function_content_bunch\n");
+        int num_children = 3;  // Number of children
+        struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
+        children[0] = (yyvsp[(1) - (3)].nd_obj).nd;
+        children[1] = (yyvsp[(2) - (3)].nd_obj).nd;
+        children[2] = (yyvsp[(3) - (3)].nd_obj).nd;
+        (yyval.nd_obj).nd = mknode(num_children, children, "bunch-content-bunch");
+    ;}
+    break;
+
+  case 130:
+
+/* Line 1455 of yacc.c  */
+#line 1157 "t2parser.y"
+    { 
+        printf("Parser found bunch_function_content_bunch\n");
+        int num_children = 1;  // Number of children
+        struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
+        children[0] = (yyvsp[(1) - (1)].nd_obj).nd;
+        (yyval.nd_obj).nd = mknode(num_children, children, "bunch-content-bunch");
+    ;}
+    break;
+
+  case 131:
+
+/* Line 1455 of yacc.c  */
+#line 1164 "t2parser.y"
     { 
         printf("Parser found bunchReturnFinish\n");
         int num_children = 3;  // Number of children
@@ -2756,10 +3488,10 @@ yyreduce:
     ;}
     break;
 
-  case 96:
+  case 132:
 
 /* Line 1455 of yacc.c  */
-#line 700 "t2parser.y"
+#line 1174 "t2parser.y"
     { 
         printf("Parser found bunchReturnExpFinish\n");
         int num_children = 5;  // Number of children
@@ -2773,10 +3505,26 @@ yyreduce:
     ;}
     break;
 
-  case 98:
+  case 133:
 
 /* Line 1455 of yacc.c  */
-#line 714 "t2parser.y"
+#line 1185 "t2parser.y"
+    { 
+        printf("Parser found bunchReturnExpFinish\n");
+        int num_children = 4;  // Number of children
+        struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
+        children[0] = (yyvsp[(1) - (4)].nd_obj).nd;
+        children[1] = (yyvsp[(2) - (4)].nd_obj).nd;
+        children[2] = (yyvsp[(3) - (4)].nd_obj).nd;
+        children[3] = (yyvsp[(4) - (4)].nd_obj).nd;
+        (yyval.nd_obj).nd = mknode(num_children, children, "bunchFunCallFinish");
+    ;}
+    break;
+
+  case 135:
+
+/* Line 1455 of yacc.c  */
+#line 1198 "t2parser.y"
     { 
         printf("Parser found print_contentEOL\n");
         int num_children = 2;  // Number of children
@@ -2787,10 +3535,10 @@ yyreduce:
     ;}
     break;
 
-  case 99:
+  case 136:
 
 /* Line 1455 of yacc.c  */
-#line 722 "t2parser.y"
+#line 1206 "t2parser.y"
     {    // take care of infinite loop
         printf("Parser found EOL-print_content\n");
         int num_children = 2;  // Number of children
@@ -2801,10 +3549,10 @@ yyreduce:
     ;}
     break;
 
-  case 100:
+  case 137:
 
 /* Line 1455 of yacc.c  */
-#line 730 "t2parser.y"
+#line 1214 "t2parser.y"
     { 
         printf("Parser found print_content-String\n");
         int num_children = 2;  // Number of children
@@ -2815,10 +3563,10 @@ yyreduce:
     ;}
     break;
 
-  case 101:
+  case 138:
 
 /* Line 1455 of yacc.c  */
-#line 738 "t2parser.y"
+#line 1222 "t2parser.y"
     { 
         printf("Parser found print_content-exp\n");
         int num_children = 2;  // Number of children
@@ -2829,10 +3577,10 @@ yyreduce:
     ;}
     break;
 
-  case 102:
+  case 139:
 
 /* Line 1455 of yacc.c  */
-#line 746 "t2parser.y"
+#line 1230 "t2parser.y"
     { 
         printf("Parser found print_content-comma-String\n");
         int num_children = 3;  // Number of children
@@ -2844,10 +3592,10 @@ yyreduce:
     ;}
     break;
 
-  case 103:
+  case 140:
 
 /* Line 1455 of yacc.c  */
-#line 755 "t2parser.y"
+#line 1239 "t2parser.y"
     { 
         printf("Parser found print_content-comma-exp\n");
         int num_children = 3;  // Number of children
@@ -2859,10 +3607,10 @@ yyreduce:
     ;}
     break;
 
-  case 104:
+  case 141:
 
 /* Line 1455 of yacc.c  */
-#line 766 "t2parser.y"
+#line 1250 "t2parser.y"
     { 
         printf("Parser found printStatement\n");
         int num_children = 4;  // Number of children
@@ -2875,46 +3623,92 @@ yyreduce:
     ;}
     break;
 
-  case 105:
+  case 142:
 
 /* Line 1455 of yacc.c  */
-#line 778 "t2parser.y"
+#line 1262 "t2parser.y"
+    {oldscope=scope;scope=0;;}
+    break;
+
+  case 143:
+
+/* Line 1455 of yacc.c  */
+#line 1262 "t2parser.y"
+    {add('F');scope=oldscope;;}
+    break;
+
+  case 144:
+
+/* Line 1455 of yacc.c  */
+#line 1262 "t2parser.y"
     { 
         printf("Parser found equation\n");
-        int num_children = 8;  // Number of children
+        int num_children = 8;  // Number of childrenfunction_call
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
-        children[0] = (yyvsp[(1) - (8)].nd_obj).nd;
-        children[1] = (yyvsp[(2) - (8)].nd_obj).nd;
-        children[2] = (yyvsp[(3) - (8)].nd_obj).nd; 
-        children[3] = (yyvsp[(4) - (8)].nd_obj).nd;
-        children[4] = (yyvsp[(5) - (8)].nd_obj).nd;
-        children[5] = (yyvsp[(6) - (8)].nd_obj).nd;
-        children[6] = (yyvsp[(7) - (8)].nd_obj).nd;
-        children[7] = (yyvsp[(8) - (8)].nd_obj).nd;
+        children[0] = (yyvsp[(1) - (10)].nd_obj).nd;
+        children[1] = (yyvsp[(3) - (10)].nd_obj).nd;
+        children[2] = (yyvsp[(5) - (10)].nd_obj).nd; 
+        children[3] = (yyvsp[(6) - (10)].nd_obj).nd;
+        children[4] = (yyvsp[(7) - (10)].nd_obj).nd;
+        children[5] = (yyvsp[(8) - (10)].nd_obj).nd;
+        children[6] = (yyvsp[(9) - (10)].nd_obj).nd;
+        children[7] = (yyvsp[(10) - (10)].nd_obj).nd;
         (yyval.nd_obj).nd = mknode(num_children, children, "func-id-(param){content}");
+        symbol_table[count-curr_num_params-3].num_params= curr_num_params;
+        if(symbol_table[count-curr_num_params-3].num_params>=0){
+            printf("XXXX changed num_params of %s to %d\n",symbol_table[count-curr_num_params-3].id_name,symbol_table[count-curr_num_params-3].num_params);
+            curr_num_params=0;
+        }
     ;}
     break;
 
-  case 106:
+  case 145:
 
 /* Line 1455 of yacc.c  */
-#line 794 "t2parser.y"
+#line 1283 "t2parser.y"
+    { check_declaration((yyvsp[(1) - (1)].nd_obj).name); ;}
+    break;
+
+  case 146:
+
+/* Line 1455 of yacc.c  */
+#line 1283 "t2parser.y"
     { 
         printf("Parser found id(idLine)Finish\n");
         int num_children = 4;  // Number of children
         struct node **children = (struct node **)malloc(num_children * sizeof(struct node *));
-        children[0] = (yyvsp[(1) - (4)].nd_obj).nd;
-        children[1] = (yyvsp[(2) - (4)].nd_obj).nd;
-        children[2] = (yyvsp[(3) - (4)].nd_obj).nd; 
-        children[3] = (yyvsp[(4) - (4)].nd_obj).nd;
+        children[0] = (yyvsp[(1) - (5)].nd_obj).nd;
+        children[1] = (yyvsp[(3) - (5)].nd_obj).nd;
+        children[2] = (yyvsp[(4) - (5)].nd_obj).nd; 
+        children[3] = (yyvsp[(5) - (5)].nd_obj).nd;
         (yyval.nd_obj).nd = mknode(num_children, children, "id(idLine)Finish");
+
+        for(int i=0;i<count;i++){
+            if(strcmp(symbol_table[i].id_name,(yyvsp[(1) - (5)].nd_obj).name)==0){  // found the corresponding function
+            if(symbol_table[i].num_params==-1){
+                printf("ERROR:  %s is not a function\n",(yyvsp[(1) - (5)].nd_obj).name);
+                sprintf(errors[sem_errors], "Line %d:  %s is not a function\n", countn+1,(yyvsp[(1) - (5)].nd_obj).name);
+                sem_errors++;
+                break;
+            }
+                // if(symbol_table[i].num_params!=curr_num_args){
+                //     printf("ERROR: Number of parameters do not match\n");
+                //     sprintf(errors[sem_errors], "Line %d: need %d arguments but found %d args\n", countn+1,symbol_table[i].num_params,curr_num_args);
+                //     sem_errors++;
+                //     break;
+                // }
+            }
+        }
+
+        curr_num_args=0;
+        sprintf(icg[ic_idx++], "CALL %s\n", (yyvsp[(1) - (5)].nd_obj).name);
     ;}
     break;
 
 
 
 /* Line 1455 of yacc.c  */
-#line 2918 "t2parser.tab.c"
+#line 3712 "t2parser.tab.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -3126,12 +3920,142 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 804 "t2parser.y"
+#line 1313 "t2parser.y"
 
 
 int main(){
+    for(int i=0;i<10000;i++){
+        laddercounts[i]=0;
+        isleader[i]=0;
+        insNumOfLabel[i]=-1;
+    }
+    isleader[0]=1;
+    strcpy(exp_type," ");
+    printf("\n\n");
+	printf("\t\t\t\t\t\t\t\t PHASE 1: LEXICAL ANALYSIS \n\n");
+    for(int i=0;i<10000;i++){
+        symbol_table[i].used = 0;
+        symbol_table[i].range_count = 0;   
+        // for(int j=0;j<10000;j++){
+        //     symbol_table[i].range[j][0]=-1;
+        //     symbol_table[i].range[j][1]=-1;   // dummy values
+        // }
+    }
     yyparse();
-    printtree(head);
+	printf("\nSYMBOL   DATATYPE   TYPE   LineNUMBER  SCOPE  numParams\n");
+	printf("_______________________________________\n\n");
+	int i=0;
+	// for(i=0; i<count; i++) {
+
+	// 	printf("%s\t%s\t%s\t%d\t%d\t%d\n", symbol_table[i].id_name, symbol_table[i].data_type, symbol_table[i].type, symbol_table[i].line_no,symbol_table[i].thisscope,symbol_table[i].num_params);
+	// }
+    for (i = 0; i < count; i++) {
+        printf("%s\t%s\t%s\t%d\t%d\t%d\t%s\n", symbol_table[i].id_name, symbol_table[i].data_type, symbol_table[i].type, symbol_table[i].line_no, symbol_table[i].thisscope, symbol_table[i].num_params, symbol_table[i].used ? "Used" : "unUsed");
+    }
+
+	
+	printf("\n\n");
+	printf("\t\t\t\t\t\t\t\t PHASE 2: SYNTAX ANALYSIS \n\n");
+	printtree(head); 
+	printf("\n\n\n\n");
+	printf("\t\t\t\t\t\t\t\t PHASE 3: SEMANTIC ANALYSIS \n\n");
+	if(sem_errors>0) {
+		printf("Semantic analysis completed with %d errors\n", sem_errors);
+		for(int i=0; i<sem_errors; i++){
+			printf("\t - %s", errors[i]);
+		}
+	} else {
+		printf("Semantic analysis completed with no errors");
+	}
+	printf("\n\n");
+    printf("\t\t\t\t\t\t\t   PHASE 4: INTERMEDIATE CODE GENERATION \n\n");
+	for(int i=0; i<ic_idx; i++){
+        if(icg[i][0]=='L' && icg[i][0]=='A'){
+            printf("\n");
+        }
+		printf("%d  %s", i,icg[i]);
+	}
+	printf("\n\n");
+
+    // Assuming icg[] contains the strings "LABEL L15", "LABEL L20", etc.
+    for (int i = 0; i < ic_idx; i++) {
+        // Check if the string starts with "LABEL L"
+        if (strncmp(icg[i], "LABEL L", 7) == 0) {
+            // Extract the label number from the string
+            int labelNumber = atoi(icg[i] + 7); // Skip "LABEL L" and convert the rest to integer
+            
+            // Use the label number to index into insNumOfLabel array
+            insNumOfLabel[labelNumber] = i;
+        }
+    }
+
+    for(int i=0;i<ic_idx;i++){
+        if (strncmp(icg[i], "if NOT (", 8) == 0) {
+            char *ptr = strstr(icg[i], "L"); // Find the first occurrence of "L" in the string
+            int labelNumber = atoi(ptr + 1); // Convert the substring after "L" to integer
+            //printf("Extracted label number: %d\n", labelNumber);
+            isleader[insNumOfLabel[labelNumber]] = 1;
+            if(i+1<10000)
+                isleader[i+1]=1;
+        }
+    }
+
+    printf("\t\t\tBLOCKS:\n\n");
+    int prev=-1,blockcount=0;
+    for(int i=0;i<10000;i++){
+        // if(insNumOfLabel[i]!=-1){
+        //     printf("Label %d is at %d\n",i,insNumOfLabel[i]);
+        // }
+        if(isleader[i]){
+            if(prev!=-1)
+            printf("block %d: %d to %d\n",blockcount++,prev,i-1);
+            //printf("Leader %d\n",i);
+            prev=i;
+        }
+    }
+    
+    printf("\n\n");
+
+    // Iterate over the symbol table to print ranges for unused variables
+    for (int i = 0; i < count; i++) {
+        if (symbol_table[i].used <= 0 && strcmp(symbol_table[i].type, "Variable") == 0) {
+             printf("Variable %s declared but not used\n", symbol_table[i].id_name);
+             printf("Ranges for %s:\n", symbol_table[i].id_name);
+            for (int j = 0; j < symbol_table[i].range_count; j++) {
+                printf("[%d, %d]\n", symbol_table[i].range[j][0], symbol_table[i].range[j][1]);
+                uselessranges[uselessrangescount][0] = symbol_table[i].range[j][0];
+                uselessranges[uselessrangescount++][1] = symbol_table[i].range[j][1];
+            }
+            printf("\n");
+        }
+    }
+    for(i=0;i<count;i++) {
+		free(symbol_table[i].id_name);   // symbol is needed, so dont free yet
+		free(symbol_table[i].type);
+	}
+    //printf("done");
+
+    // Sort uselessranges
+    sortRanges(uselessranges, uselessrangescount);
+    int uselessrangesidx = 0;
+    printf(" uselessrangescount=%d\n", uselessrangescount);
+    printf("\t\t\t\t\t\t\t   PHASE 5: OPTIMIZATION \n\n");
+	for(int i=0; i<ic_idx; i++){
+        if (uselessrangesidx < uselessrangescount && i == uselessranges[uselessrangesidx][0]) {
+            uselessrangesidx++;
+            i=uselessranges[uselessrangesidx-1][1];
+            //printf("skipping from %d to %d\n", uselessranges[uselessrangesidx-1][0], uselessranges[uselessrangesidx-1][1]);
+            continue;
+        }
+        if(icg[i][0]=='L' && icg[i][0]=='A'){
+            printf("\n");
+        }
+		printf("%d %s",i, icg[i]);
+	}
+	printf("\n\n");
+
+    
+
     return 0;
 }
 
@@ -3162,6 +4086,178 @@ void printInorder(struct node *tree) {
 		}
 	}
 }
+
+/////////////////////////////////////  SYMBOL TABLE & SEMANTIC ANALYSIS PART
+
+int search(char *type) {
+	int i;
+	for(i=count-1; i>=0; i--) {
+		if(strcmp(symbol_table[i].id_name, type)==0) {
+			return symbol_table[i].thisscope;
+			break;
+		}
+	}
+	return 0;
+}
+
+void check_declaration(char *c) {
+    q = search(c);
+    // if(!q) {
+    //     sprintf(errors[sem_errors], "Line %d: Variable \"%s\" not declared before usage!\n", countn+1, c);
+	// 	sem_errors++;
+    // }
+}
+
+char *get_type(char *var){
+	for(int i=0; i<count; i++) {
+		// Handle case of use before declaration
+		if(!strcmp(symbol_table[i].id_name, var)) {
+			return symbol_table[i].type;
+		}
+	}
+}
+char *get_datatype(char *var){
+	for(int i=0; i<count; i++) {
+		// Handle case of use before declaration
+		if(!strcmp(symbol_table[i].id_name, var)) {
+			return symbol_table[i].data_type;
+		}
+	}
+}
+
+void add(char c) {
+	if(c == 'V'){ // variable
+		for(int i=0; i<reserved_count; i++){
+			if(!strcmp(reserved[i], strdup(yy_text))){
+        		sprintf(errors[sem_errors], "Line %d: Variable name \"%s\" is a reserved keyword!\n", countn+1, yy_text);
+				sem_errors++;
+				return;
+			}
+		}
+	}
+    q=search(yy_text);
+	if(!q) {   // insert into symbol table only if not already present
+		if(c == 'H') {  //header
+			symbol_table[count].id_name=strdup(yy_text);
+			symbol_table[count].data_type=strdup(type);
+			symbol_table[count].line_no=countn;
+			symbol_table[count].type=strdup("Header");
+            symbol_table[count].thisscope=scope;
+            symbol_table[count].num_params=-1; 
+			count++;
+		}
+		else if(c == 'K') { //keyword
+			symbol_table[count].id_name=strdup(yy_text);
+			symbol_table[count].data_type=strdup("N/A");
+			symbol_table[count].line_no=countn;
+			symbol_table[count].type=strdup("Keyword\t");
+            symbol_table[count].thisscope=scope;
+            symbol_table[count].num_params=-1;
+			count++;
+		}
+		else if(c == 'V') { //variable
+            printf("yytext: %s\n", yy_text);
+			symbol_table[count].id_name=strdup(yy_text);
+			symbol_table[count].data_type=strdup(type);
+			symbol_table[count].line_no=countn;
+			symbol_table[count].type=strdup("Variable");
+            symbol_table[count].thisscope=scope;
+            symbol_table[count].num_params=-1;
+			count++;
+		}
+        else if(c == 'C') {  //constant sankhya
+			symbol_table[count].id_name=strdup(yy_text);
+			symbol_table[count].data_type=strdup("CONST");
+			symbol_table[count].line_no=countn;
+			symbol_table[count].type=strdup("constantx");
+            symbol_table[count].thisscope=scope;
+            symbol_table[count].num_params=-1;
+			count++;
+		}
+		else if(c == 'i') {  //constant sankhya
+			symbol_table[count].id_name=strdup(yy_text);
+			symbol_table[count].data_type=strdup("CONST");
+			symbol_table[count].line_no=countn;
+			symbol_table[count].type=strdup("sankhya");
+            symbol_table[count].thisscope=scope;
+            symbol_table[count].num_params=-1;
+			count++;
+		}
+        else if(c == 'f') {  //constant float thelu
+			symbol_table[count].id_name=strdup(yy_text);
+			symbol_table[count].data_type=strdup("CONST");
+			symbol_table[count].line_no=countn;
+			symbol_table[count].type=strdup("thelu");
+            symbol_table[count].thisscope=scope;
+            symbol_table[count].num_params=-1;
+			count++;
+		}
+        else if(c == 'c') {  //constant character aksharam
+			symbol_table[count].id_name=strdup(yy_text);
+			symbol_table[count].data_type=strdup("CONST");
+			symbol_table[count].line_no=countn;
+			symbol_table[count].type=strdup("aksharam");
+            symbol_table[count].thisscope=scope;
+            symbol_table[count].num_params=-1;
+			count++;
+		}
+        else if(c == 's') {  //constant string theega
+			symbol_table[count].id_name=strdup(yy_text);
+			symbol_table[count].data_type=strdup("CONST");
+			symbol_table[count].line_no=countn;
+			symbol_table[count].type=strdup("theega");
+            symbol_table[count].thisscope=scope;
+            symbol_table[count].num_params=-1;
+			count++;
+		}
+		else if(c == 'F') {
+			symbol_table[count].id_name=strdup(yy_text);
+			symbol_table[count].data_type=strdup(type);
+			symbol_table[count].line_no=countn;
+			symbol_table[count].type=strdup("Function");
+            symbol_table[count].thisscope=scope;
+            printf("\nSETTING %s's params to %d\n", symbol_table[count-curr_num_params].id_name, curr_num_params);
+            symbol_table[count-curr_num_params].num_params=curr_num_params;
+            curr_num_params=0;
+			count++;
+		}
+        else if(c == 'L') {
+            symbol_table[count].id_name=strdup(yy_text);
+            symbol_table[count].data_type=strdup(type);
+            symbol_table[count].line_no=countn;
+            symbol_table[count].type=strdup("Library");
+            symbol_table[count].thisscope=scope;
+            symbol_table[count].num_params=0;
+            count++;
+        }
+               
+    }
+    else if(c == 'V' && q) {
+        if(q != INT_MAX){
+
+            sprintf(errors[sem_errors], "Line %d: Multiple declarations of \"%s\" not allowed!\n", countn+1, yy_text);
+            sem_errors++;
+        }
+        else{ // its scope is already destroyed, now it can be redeclared again into the symbol table with current scope
+            // search again for that symbol table value
+            int i;
+            for(i=count-1; i>=0; i--) {
+                if(strcmp(symbol_table[i].id_name, type)==0) {
+                    symbol_table[i].thisscope = scope;
+                    symbol_table[count].line_no=countn;
+                    symbol_table[count].num_params=0;
+                    printf("\nReinserted %s because its previous scope is finished\n", type);
+                    break;
+                }
+            }
+        }
+    }
+}
+
+void insert_type() {
+	strcpy(type, yy_text);
+}
+
 
 
 
