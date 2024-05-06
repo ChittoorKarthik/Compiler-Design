@@ -1,0 +1,6 @@
+TERMINAL COMMANDS TO RUN THE COMPILER:
+
+flex t2.l
+bison -d t2parser.y
+gcc lex.yy.c t2parser.tab.c -o my_program
+Get-Content input3.txt | my_program.exe
